@@ -1,16 +1,19 @@
-from PySide6.QtCore import *
-from PySide6.QtGui import *
+from PySide6.QtCore    import *
+from PySide6.QtGui     import *
 from PySide6.QtWidgets import *
 
 import os
-import sys
 import csv
-from typing import List
+from typing import Callable
 
 class EditPopup(QDialog):
     _edit_row = -1
     _delete_reject = False
-    def __init__(self, setItem, removeRow, parent=None):
+    def __init__(self, 
+        setItem:   Callable[[int, int, QTableWidgetItem], None], 
+        removeRow: Callable[[int], None], 
+        parent=None):
+        
         super().__init__(parent)
         self._removeRow = removeRow
         self._setItem = setItem
@@ -18,64 +21,51 @@ class EditPopup(QDialog):
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setWindowTitle('Edit')
         self.gridLayout_2 = QGridLayout(self)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout = QGridLayout()
-        self.gridLayout.setObjectName(u"gridLayout")
         
         self.label = QLabel(self)
-        self.label.setObjectName(u"label")
         self.label.setText('Reagent')
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
 
         self.label_2 = QLabel(self)
-        self.label_2.setObjectName(u"label_2")
         self.label_2.setText('Flow Rate (uL/min)')
         self.gridLayout.addWidget(self.label_2, 6, 0, 1, 1)
 
         self.label_3 = QLabel(self)
-        self.label_3.setObjectName(u"label_3")
         self.label_3.setText('Time (sec)')
         self.gridLayout.addWidget(self.label_3, 7, 0, 1, 1)
 
         self.radioButton_None = QRadioButton(self)
-        self.radioButton_None.setObjectName(u"radioButton_None")
         self.radioButton_None.setChecked(True)
         self.radioButton_None.setText('None')
         self.gridLayout.addWidget(self.radioButton_None, 0, 1, 1, 1)
 
         self.radioButton_1 = QRadioButton(self)
-        self.radioButton_1.setObjectName(u"radioButton_1")
         self.radioButton_1.setText('1')
         self.gridLayout.addWidget(self.radioButton_1, 1, 1, 1, 1)
         
         self.radioButton_2 = QRadioButton(self)
-        self.radioButton_2.setObjectName(u"radioButton_2")
         self.radioButton_2.setText('2')
         self.gridLayout.addWidget(self.radioButton_2, 2, 1, 1, 1)
 
         self.radioButton_3 = QRadioButton(self)
-        self.radioButton_3.setObjectName(u"radioButton_3")
         self.radioButton_3.setText('3')
         self.gridLayout.addWidget(self.radioButton_3, 3, 1, 1, 1)
 
         self.radioButton_4 = QRadioButton(self)
-        self.radioButton_4.setObjectName(u"radioButton_4")
         self.radioButton_4.setText('4')
         self.gridLayout.addWidget(self.radioButton_4, 4, 1, 1, 1)
 
         self.flow_rate = QDoubleSpinBox(self)
-        self.flow_rate.setObjectName(u"flow_rate")
         self.flow_rate.setSingleStep(0.01)
         self.gridLayout.addWidget(self.flow_rate, 6, 1, 1, 1)
 
         self.time = QSpinBox(self)
-        self.time.setObjectName(u"time")
         self.gridLayout.addWidget(self.time, 7, 1, 1, 1)
 
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
 
         self.buttonBox = QDialogButtonBox(self)
-        self.buttonBox.setObjectName(u"buttonBox")
         self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
         self.buttonBox.setStandardButtons(
             QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok
@@ -124,7 +114,7 @@ class EditPopup(QDialog):
         self._delete_reject = False
         return super().reject()
 
-class TableForm(QFrame):
+class Table(QFrame):
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -133,10 +123,8 @@ class TableForm(QFrame):
         self.setAcceptDrops(True)
 
         self.gridLayout = QGridLayout(self)
-        self.gridLayout.setObjectName(u"gridLayout")
         
         self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
         
         self.table = QTableWidget(self)
         if (self.table.columnCount() < 3):
@@ -144,7 +132,6 @@ class TableForm(QFrame):
         self.table.setHorizontalHeaderItem(0, QTableWidgetItem('Reagent'))
         self.table.setHorizontalHeaderItem(1, QTableWidgetItem('Flow Rate'))
         self.table.setHorizontalHeaderItem(2, QTableWidgetItem('Time'))
-        self.table.setObjectName(u"table")
         self.table.horizontalHeader().setMinimumSectionSize(100)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -159,10 +146,8 @@ class TableForm(QFrame):
         )
 
         self.verticalLayout = QVBoxLayout()
-        self.verticalLayout.setObjectName(u"verticalLayout")
         
         self.buttonLoad = QPushButton(self)
-        self.buttonLoad.setObjectName(u"buttonLoad")
         self.buttonLoad.setText('&Load')
         self.buttonLoad.clicked.connect(self.loadFile)
         self.verticalLayout.addWidget(self.buttonLoad)
@@ -171,19 +156,16 @@ class TableForm(QFrame):
         self.verticalLayout.addItem(self.verticalSpacer)
 
         self.buttonNew = QPushButton(self)
-        self.buttonNew.setObjectName(u"buttonNew")
         self.buttonNew.setText('&New')
         self.buttonNew.clicked.connect(self.newRow)
         self.verticalLayout.addWidget(self.buttonNew)
 
         self.buttonEdit = QPushButton(self)
-        self.buttonEdit.setObjectName(u"buttonEdit")
         self.buttonEdit.setText('&Edit')
         self.buttonEdit.clicked.connect(self.editRow)
         self.verticalLayout.addWidget(self.buttonEdit)
 
         self.buttonDelete = QPushButton(self)
-        self.buttonDelete.setObjectName(u"buttonDelete")
         self.buttonDelete.setText('&Delete')
         self.buttonDelete.clicked.connect(self.deleteRow)
         self.verticalLayout.addWidget(self.buttonDelete)
@@ -192,13 +174,11 @@ class TableForm(QFrame):
         self.verticalLayout.addItem(self.verticalSpacer_2)
 
         self.buttonUp = QPushButton(self)
-        self.buttonUp.setObjectName(u"buttonUp")
         self.buttonUp.setText('&Up')
         self.buttonUp.clicked.connect(self.upRow)
         self.verticalLayout.addWidget(self.buttonUp)
 
         self.buttonDown = QPushButton(self)
-        self.buttonDown.setObjectName(u"buttonDown")
         self.buttonDown.setText('D&own')
         self.buttonDown.clicked.connect(self.downRow)
         self.verticalLayout.addWidget(self.buttonDown)
@@ -330,14 +310,11 @@ def _noPre(prefix: str, text: str) -> str:
     return text
 
 # for testing
-def main():
+if __name__ == "__main__":
+    import sys
     app = QApplication(sys.argv)
-    form = TableForm()
+    form = Table()
     form.show()
     sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()
 
 
