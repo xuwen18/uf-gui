@@ -241,7 +241,8 @@ class Table(QFrame):
         if len(idx) > 0:
             self.table.removeRow(idx[0].row())
             idx = self.table.selectionModel().selectedRows()
-            self.table.selectRow(idx[0].row())
+            if len(idx) > 0:
+                self.table.selectRow(idx[0].row())
 
     def moveRow(self, row_upper: int):
         if row_upper >= 0 and row_upper+1 < self.table.rowCount():
