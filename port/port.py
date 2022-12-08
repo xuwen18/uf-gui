@@ -30,6 +30,7 @@ class PortDialog(QDialog):
         self.buttonBox = QDialogButtonBox(self)
         self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
         self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
 
         self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
 
@@ -50,6 +51,7 @@ class PortDialog(QDialog):
     def selectPort(self, action: QAction):
         self.selected_port = action.text()
         self.buttonConnect.setText(self.selected_port)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
     def accept(self) -> None:
         return super().accept()
