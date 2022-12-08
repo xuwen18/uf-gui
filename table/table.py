@@ -61,6 +61,8 @@ class EditPopup(QDialog):
         self.gridLayout.addWidget(self.flow_rate, 6, 1, 1, 1)
 
         self.time = QSpinBox(self)
+        self.time.setRange(0, 100000)
+        self.time.setSingleStep(10)
         self.gridLayout.addWidget(self.time, 7, 1, 1, 1)
 
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
@@ -230,9 +232,16 @@ class Table(QFrame):
                 self.editPopup.radioButton_4.setChecked(True)
             else:
                 self.editPopup.radioButton_None.setChecked(True)
-            f = float(self.table.item(ed, 1).text())
+            # TODO: handle errors
+            try:
+                f = float(self.table.item(ed, 1).text())
+            except:
+                f = 0.0
             self.editPopup.flow_rate.setValue(f)
-            t = int(self.table.item(ed, 2).text())
+            try:
+                t = int(self.table.item(ed, 2).text())
+            except:
+                t = 0
             self.editPopup.time.setValue(t)
             self.editPopup.popup(ed, False)
     
