@@ -7,7 +7,7 @@ from typing import Optional
 
 class PortDialog(QDialog):
     selected_port: Optional[str] = None
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -45,7 +45,7 @@ class PortDialog(QDialog):
         ports_menu.triggered.connect(self.selectPort)
         for port in serial_list:
             ports_menu.addAction(port.portName())
-        
+
         self.buttonConnect.setMenu(ports_menu)
 
     def selectPort(self, action: QAction):
@@ -68,7 +68,7 @@ class PortDialog(QDialog):
             return None
         else:
             return QSerialPort(dialog.selected_port, parent, baudRate=QSerialPort.BaudRate.Baud115200)
-    
+
 
 # for testing
 if __name__ == "__main__":

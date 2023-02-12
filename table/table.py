@@ -9,11 +9,11 @@ from typing import Callable
 class EditPopup(QDialog):
     _edit_row = -1
     _delete_reject = False
-    def __init__(self, 
-        setItem:   Callable[[int, int, QTableWidgetItem], None], 
-        removeRow: Callable[[int], None], 
+    def __init__(self,
+        setItem:   Callable[[int, int, QTableWidgetItem], None],
+        removeRow: Callable[[int], None],
         parent=None):
-        
+
         super().__init__(parent)
         self._removeRow = removeRow
         self._setItem = setItem
@@ -22,7 +22,7 @@ class EditPopup(QDialog):
         self.setWindowTitle('Edit')
         self.gridLayout_2 = QGridLayout(self)
         self.gridLayout = QGridLayout()
-        
+
         self.label = QLabel(self)
         self.label.setText('Reagent')
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
@@ -43,7 +43,7 @@ class EditPopup(QDialog):
         self.radioButton_1 = QRadioButton(self)
         self.radioButton_1.setText('1')
         self.gridLayout.addWidget(self.radioButton_1, 1, 1, 1, 1)
-        
+
         self.radioButton_2 = QRadioButton(self)
         self.radioButton_2.setText('2')
         self.gridLayout.addWidget(self.radioButton_2, 2, 1, 1, 1)
@@ -86,7 +86,7 @@ class EditPopup(QDialog):
     def validEditRow(self):
         assert self._edit_row != -1 #TODO: handle properly
         return self._edit_row
-    
+
     def accept(self) -> None:
         if self.radioButton_1.isChecked():
             r = '1'
@@ -103,7 +103,7 @@ class EditPopup(QDialog):
         self._setItem(self.validEditRow(), 1, QTableWidgetItem(f))
         t = str(self.time.value())
         self._setItem(self.validEditRow(), 2, QTableWidgetItem(t))
-       
+
         self._edit_row = -1
         self._delete_reject = False
         return super().accept()
@@ -111,13 +111,13 @@ class EditPopup(QDialog):
     def reject(self) -> None:
         if self._delete_reject:
             self._removeRow(self.validEditRow())
-        
+
         self._edit_row = -1
         self._delete_reject = False
         return super().reject()
 
 class Table(QFrame):
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -125,9 +125,9 @@ class Table(QFrame):
         self.setAcceptDrops(True)
 
         self.gridLayout = QGridLayout(self)
-        
+
         self.horizontalLayout = QHBoxLayout()
-        
+
         self.table = QTableWidget(self)
         if (self.table.columnCount() < 3):
             self.table.setColumnCount(3)
@@ -143,12 +143,12 @@ class Table(QFrame):
         self.horizontalLayout.addWidget(self.table)
 
         self.editPopup = EditPopup(
-            setItem=self.table.setItem, 
+            setItem=self.table.setItem,
             removeRow=self.table.removeRow
         )
 
         self.verticalLayout = QVBoxLayout()
-        
+
         self.buttonLoad = QPushButton(self)
         self.buttonLoad.setText('&Load')
         self.buttonLoad.clicked.connect(self.loadFile)
@@ -201,7 +201,7 @@ class Table(QFrame):
         self.buttonLoad.setEnabled(b)
         self.buttonNew.setEnabled(b)
         self.setButtonsSelection(b)
-    
+
     def onSelectionChange(self, selected: QItemSelection, deselected: QItemSelection):
         idx = selected.indexes()
         self.setButtonsSelection(len(idx) > 0)
@@ -216,7 +216,7 @@ class Table(QFrame):
         self.editPopup.flow_rate.setValue(0.0)
         self.editPopup.time.setValue(0)
         self.editPopup.popup(ed, True)
-    
+
     def editRow(self):
         idx = self.table.selectionModel().selectedRows()
         if len(idx) > 0:
@@ -244,7 +244,7 @@ class Table(QFrame):
                 t = 0
             self.editPopup.time.setValue(t)
             self.editPopup.popup(ed, False)
-    
+
     def deleteRow(self):
         idx = self.table.selectionModel().selectedRows()
         if len(idx) > 0:
@@ -270,7 +270,7 @@ class Table(QFrame):
                 self.table.selectRow(ed-1)
             else:
                 self.table.selectRow(ed)
-    
+
     def downRow(self):
         idx = self.table.selectionModel().selectedRows()
         if len(idx) > 0:
@@ -297,7 +297,7 @@ class Table(QFrame):
     def dropEvent(self, event: QDropEvent):
         url: str = event.mimeData().text()
         self.loadCSV(_noPre('file:///', url))
-    
+
     def loadCSV(self, name: str):
         self.table.setRowCount(0)
         with open(name, newline='') as csvfile:

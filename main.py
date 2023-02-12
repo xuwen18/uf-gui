@@ -1,13 +1,18 @@
-from PySide6.QtCore    import *
-from PySide6.QtGui     import *
-from PySide6.QtWidgets import *
+import sys
+import math
+
+from PySide6.QtCore    import QRect
+from PySide6.QtWidgets import (
+    QWidget, QMainWindow, QGridLayout, QTabWidget,
+    QLabel, QHBoxLayout, QPushButton, QSpacerItem,
+    QSizePolicy, QMenuBar, QStatusBar,
+    QApplication
+)
 
 from canvas.canvas import Canvas
 from table.table   import Table
 from port.port     import PortDialog
 
-import sys
-import math
 
 class MainWindow(QMainWindow):
     serial = None
@@ -19,7 +24,7 @@ class MainWindow(QMainWindow):
 
         self.gridLayout = QGridLayout(self.centralwidget)
         self.tabWidget = QTabWidget(self.centralwidget)
-        
+
         self.tab1 = QWidget()
         self.gridLayout1 = QGridLayout(self.tab1)
         self.table = Table(self.tab1)
@@ -31,7 +36,7 @@ class MainWindow(QMainWindow):
         self.canvas = Canvas(getData=lambda i: math.cos(0.1*i), parent=self)
         self.gridLayout2.addWidget(self.canvas, 0, 0, 1, 1)
         self.tabWidget.addTab(self.tab2, "")
-        
+
         self.labelReagent = QLabel(self.tab2)
         self.gridLayout2.addWidget(self.labelReagent, 1, 0, 1, 1)
 
@@ -47,7 +52,9 @@ class MainWindow(QMainWindow):
         self.buttonConnect.clicked.connect(self.onConnect)
         self.horizontalLayout.addWidget(self.buttonConnect)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer = QSpacerItem(
+            40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
         self.buttonStart = QPushButton(self.tab2)
@@ -78,7 +85,7 @@ class MainWindow(QMainWindow):
         self.buttonConnect.setText('&Connect')
         self.buttonStart.setText('&Start')
         self.buttonPause.setText('&Pause')
-    
+
     def onConnect(self):
         serial = PortDialog.getSerial(self)
         if serial is not None:
