@@ -25,5 +25,6 @@ jobs:
         run: |
           pylint ./main.py
           pylint ./canvas/canvas.py
+          pylint ./log/log.py
           pylint ./port/port.py
           pylint ./table/table.py
