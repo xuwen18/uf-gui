@@ -17,12 +17,12 @@ jobs:
       - name: install requirements
         run: |
           pip3 install -r requirements.txt
-      - name: install mypy
+      - name: install pylint
         run: |
-          pip3 install mypy
-      - name: run mypy
+          pip3 install pylint
+      - name: run pylint
         run: |
-          mypy ./main.py
-          mypy ./canvas/canvas.py
-          mypy ./port/port.py
-          mypy ./table/table.py
+          pylint ./main.py
+          pylint ./canvas/canvas.py
+          pylint ./port/port.py
+          pylint ./table/table.py
