@@ -1,9 +1,0 @@
-[pylint]
-fail-under=8.0
-
-disable=
-    import-error,
-    invalid-name,
-    missing-docstring,
-    too-many-instance-attributes,
-    too-few-public-methods,

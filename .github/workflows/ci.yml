@@ -10,19 +10,19 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.10' 
+          python-version: '3.10'
       - name: print version of pythons
         run: |
           python3 --version
       - name: install requirements
         run: |
           pip3 install -r requirements.txt
-      - name: install pylint
+      - name: install mypy
         run: |
-          pip3 install pylint 
-      - name: run pylint
+          pip3 install mypy
+      - name: run mypy
         run: |
-          pylint ./main.py
-          pylint ./canvas/canvas.py
-          pylint ./port/port.py
-          pylint ./table/table.py
+          mypy ./main.py
+          mypy ./canvas/canvas.py
+          mypy ./port/port.py
+          mypy ./table/table.py
