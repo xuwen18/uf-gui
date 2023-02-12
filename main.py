@@ -1,8 +1,13 @@
 import sys
 import math
 
-from PySide6.QtCore    import *
-from PySide6.QtWidgets import *
+from PySide6.QtCore    import QRect
+from PySide6.QtWidgets import (
+    QWidget, QMainWindow, QGridLayout, QTabWidget,
+    QLabel, QHBoxLayout, QPushButton, QSpacerItem,
+    QSizePolicy, QMenuBar, QStatusBar,
+    QApplication
+)
 
 from canvas.canvas import Canvas
 from table.table   import Table
