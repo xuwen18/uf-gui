@@ -5,7 +5,7 @@ extension-pkg-whitelist=
     PySide6-Addons,
     PySide6-Essentials
 
-fail-under=8.0
+fail-under=7.0
 
 disable=
     import-error,

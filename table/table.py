@@ -182,7 +182,10 @@ class Table(QFrame):
         self.buttonDelete.clicked.connect(self.deleteRow)
         self.verticalLayout.addWidget(self.buttonDelete)
 
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(
+            20, 40,
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
         self.verticalLayout.addItem(self.verticalSpacer_2)
 
         self.buttonUp = QPushButton(self)

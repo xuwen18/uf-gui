@@ -33,7 +33,9 @@ class PortDialog(QDialog):
 
         self.buttonBox = QDialogButtonBox(self)
         self.buttonBox.setOrientation(Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok)
+        self.buttonBox.setStandardButtons(
+            QDialogButtonBox.StandardButton.Cancel|QDialogButtonBox.StandardButton.Ok
+        )
         self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(False)
 
         self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
@@ -57,9 +59,6 @@ class PortDialog(QDialog):
         self.buttonConnect.setText(self.selected_port)
         self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
-    def accept(self) -> None:
-        return super().accept()
-
     def reject(self) -> None:
         self.selected_port = None
         return super().reject()
@@ -70,8 +69,10 @@ class PortDialog(QDialog):
         dialog.exec()
         if dialog.selected_port is None:
             return None
-        else:
-            return QSerialPort(dialog.selected_port, parent, baudRate=QSerialPort.BaudRate.Baud115200)
+        return QSerialPort(
+            dialog.selected_port, parent,
+            baudRate=QSerialPort.BaudRate.Baud115200
+        )
 
 
 # for testing
