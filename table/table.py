@@ -35,7 +35,7 @@ class EditPopup(QDialog):
         self.gridLayout = QGridLayout()
 
         self.label = QLabel(self)
-        self.label.setText('Reagent')
+        self.label.setText('Reservoir')
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
 
         self.label_2 = QLabel(self)
@@ -144,7 +144,7 @@ class Table(QFrame):
         self.table = QTableWidget(self)
         if self.table.columnCount() < 3:
             self.table.setColumnCount(3)
-        self.table.setHorizontalHeaderItem(0, QTableWidgetItem('Reagent'))
+        self.table.setHorizontalHeaderItem(0, QTableWidgetItem('Reservoir'))
         self.table.setHorizontalHeaderItem(1, QTableWidgetItem('Flow Rate'))
         self.table.setHorizontalHeaderItem(2, QTableWidgetItem('Time'))
         self.table.horizontalHeader().setMinimumSectionSize(100)

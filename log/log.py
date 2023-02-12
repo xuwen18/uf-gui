@@ -1,3 +1,5 @@
+import os
+
 from datetime import datetime
 
 from PySide6.QtGui     import QTextCursor
@@ -19,12 +21,13 @@ class LogStream(QObject):
 class Logger(QTextEdit):
     isDebug: bool
     fname: str
-    def __init__(self, isDebug: bool, *args, **kwargs):
+    def __init__(self, isDebug: bool, dir='./output/', *args, **kwargs):
         QTextEdit.__init__(self, *args, **kwargs)
         self.setReadOnly(True)
         self.isDebug = isDebug
         d = datetime.now().strftime("%Y-%m-%d-%H%M%S")
-        self.fname = './log '+d+'.log'
+        os.makedirs(dir, exist_ok=True)
+        self.fname = dir+'log '+d+'.log'
         # Install the custom output stream
         # self.out = LogStream()
         # self.out.written.connect(self.written)

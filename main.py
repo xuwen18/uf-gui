@@ -46,8 +46,8 @@ class MainWindow(QMainWindow):
         )
         self.gridLayout2.addWidget(self.canvas, 0, 0, 1, 1)
 
-        self.labelReagent = QLabel(self.tab2)
-        self.gridLayout2.addWidget(self.labelReagent, 1, 0, 1, 1)
+        self.labelReservoir = QLabel(self.tab2)
+        self.gridLayout2.addWidget(self.labelReservoir, 1, 0, 1, 1)
 
         self.labelFlow = QLabel(self.tab2)
         self.gridLayout2.addWidget(self.labelFlow, 2, 0, 1, 1)
@@ -67,10 +67,8 @@ class MainWindow(QMainWindow):
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
         self.buttonStart = QPushButton(self.tab2)
+        self.buttonStart.clicked.connect(self.onRun)
         self.horizontalLayout.addWidget(self.buttonStart)
-
-        self.buttonPause = QPushButton(self.tab2)
-        self.horizontalLayout.addWidget(self.buttonPause)
 
         self.gridLayout2.addLayout(self.horizontalLayout, 4, 0, 1, 1)
 
@@ -93,14 +91,23 @@ class MainWindow(QMainWindow):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab1), 'Commands')
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab2), 'Main')
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab3), 'Logs')
-        self.labelReagent.setText('Reagent: ')
+        self.labelReservoir.setText('Reservoir: ')
         self.labelFlow.setText('Flow rate: ')
         self.labelPressure.setText('Pressure: ')
         self.buttonConnect.setText('&Connect')
         self.buttonStart.setText('&Start')
-        self.buttonPause.setText('&Pause')
 
         self.log.debug("GUI started")
+
+    def onRun(self):
+        if self.canvas.timer.isActive():
+            self.canvas.timer.stop()
+            self.log.info('paused')
+            self.buttonStart.setText('&Start')
+        else:
+            self.canvas.timer.start()
+            self.log.info('started')
+            self.buttonStart.setText('&Pause')
 
     def onConnect(self):
         serial = PortDialog.getSerial(self)
