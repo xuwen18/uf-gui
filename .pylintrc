@@ -8,8 +8,8 @@ extension-pkg-whitelist=
 fail-under=7.0
 
 disable=
-    import-error,
     invalid-name,
+    no-name-in-module,
     missing-docstring,
     too-many-statements,
     too-many-instance-attributes,

@@ -58,4 +58,3 @@ class Logger(QTextEdit):
 
         if self.isDebug:
             print(msg)
-
