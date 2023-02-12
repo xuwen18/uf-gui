@@ -1,9 +1,13 @@
-from PySide6.QtCore       import *
-from PySide6.QtGui        import *
-from PySide6.QtWidgets    import *
-from PySide6.QtSerialPort import *
-
 from typing import Optional
+
+from PySide6.QtGui        import Qt, QAction
+from PySide6.QtWidgets    import (
+    QApplication, QDialog, QLabel, QMenu,
+    QGridLayout, QHBoxLayout,
+    QPushButton, QDialogButtonBox,
+)
+from PySide6.QtSerialPort import QSerialPort, QSerialPortInfo
+
 
 class PortDialog(QDialog):
     selected_port: Optional[str] = None

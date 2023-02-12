@@ -1,10 +1,20 @@
-from PySide6.QtCore    import *
-from PySide6.QtGui     import *
-from PySide6.QtWidgets import *
-
 import os
 import csv
 from typing import Callable
+
+from PySide6.QtCore    import Qt, QItemSelection
+from PySide6.QtGui     import QDragEnterEvent, QDropEvent
+from PySide6.QtWidgets import (
+    QDialog, QFrame, QLabel,
+    QGridLayout, QHBoxLayout, QVBoxLayout,
+    QSpacerItem,
+    QTableWidget, QTableWidgetItem, QHeaderView,
+    QPushButton, QRadioButton,
+    QSpinBox, QDoubleSpinBox,
+    QFileDialog, QDialogButtonBox,
+    QAbstractItemView, QSizePolicy,
+    QApplication
+)
 
 class EditPopup(QDialog):
     _edit_row = -1

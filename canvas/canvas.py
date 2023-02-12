@@ -1,7 +1,3 @@
-from PySide6.QtCore    import *
-from PySide6.QtGui     import *
-from PySide6.QtWidgets import *
-
 from typing import List, Callable
 
 import matplotlib
@@ -14,6 +10,10 @@ from matplotlib.backends.backend_qt5agg import (
 )
 from matplotlib.figure    import Figure
 from matplotlib.animation import FuncAnimation
+
+from PySide6.QtWidgets import (
+    QFrame, QVBoxLayout, QApplication
+)
 
 
 class Canvas(QFrame):
@@ -52,5 +52,3 @@ if __name__ == "__main__":
     c = Canvas(lambda i: math.cos(0.1 * i))
     c.show()
     sys.exit(app.exec())
-
-

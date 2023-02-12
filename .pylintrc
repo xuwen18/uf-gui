@@ -1,6 +1,9 @@
 [pylint]
 
-extension-pkg-whitelist=PySide6
+extension-pkg-whitelist=
+    PySide6,
+    PySide6-Addons,
+    PySide6-Essentials
 
 fail-under=8.0
 
@@ -10,4 +13,3 @@ disable=
     missing-docstring,
     too-many-instance-attributes,
     too-few-public-methods,
-    wildcard-import,
