@@ -341,11 +341,13 @@ class Table(QFrame):
         file, _ = QFileDialog.getSaveFileName(self, "Save File",
             "", "CSV File (*.csv)"
         )
-        if len(file) == 0:
-            return
-        self.log.info(f'saved as file: {file}')
+        if len(file) > 0:
+            self.saveCSV(file)
+
+    def saveCSV(self, name: str):
+        self.log.info(f'saved as file: {name}')
         row = self.table.rowCount()
-        with open(file, 'w', newline='', encoding="utf-8") as csvfile:
+        with open(name, 'w', newline='', encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             for i in range(row):
                 writer.writerow([
