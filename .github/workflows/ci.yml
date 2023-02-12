@@ -1,0 +1,25 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  builds:
+    runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10' 
+    - name: print version of pythons
+      run: |
+        python3 --version
+    - name: install pylint
+      run: |
+        pip3 install pylint 
+    - name: run pylint
+        pylint ./main.py
+        pylint ./canvas/canvas.py
+        pylint ./port/port.py
+        pylint ./table/table.py
