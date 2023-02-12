@@ -12,16 +12,16 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'pip'
-      - name: print version of pythons
+      - name: Print version of pythons
         run: |
           python3 --version
-      - name: install requirements
+      - name: Install requirements
         run: |
           pip install -r requirements.txt
-      - name: install pylint
+      - name: Install pylint
         run: |
           pip install pylint
-      - name: run pylint
+      - name: Run pylint
         run: |
           pylint ./main.py
           pylint ./canvas/canvas.py

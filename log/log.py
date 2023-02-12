@@ -53,9 +53,8 @@ class Logger(QTextEdit):
         self.moveCursor(QTextCursor.End)
         self.ensureCursorVisible()
 
-        f = open(self.fname, "a", encoding="utf-8")
-        f.write(msg+"\n")
-        f.close
+        with open(self.fname, "a", encoding="utf-8") as f:
+            f.write(msg+"\n")
 
         if self.isDebug:
             print(msg)
