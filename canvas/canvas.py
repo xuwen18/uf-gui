@@ -2,8 +2,6 @@ from typing import List, Callable
 
 import matplotlib
 
-matplotlib.use('Qt5Agg')
-
 from matplotlib.backends.backend_qt5agg import (
     FigureCanvasQTAgg,
     # NavigationToolbar2QT as NavigationToolbar
@@ -15,6 +13,7 @@ from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QApplication
 )
 
+matplotlib.use('Qt5Agg')
 
 class Canvas(QFrame):
     x: List[float] = 200*[0.0]
