@@ -12,9 +12,10 @@ from PySide6.QtWidgets import (
     QPushButton, QRadioButton,
     QSpinBox, QDoubleSpinBox,
     QFileDialog, QDialogButtonBox,
-    QAbstractItemView, QSizePolicy,
-    QApplication
+    QAbstractItemView, QSizePolicy
 )
+
+from log.log import LogStream
 
 class EditPopup(QDialog):
     _edit_row = -1
@@ -128,8 +129,10 @@ class EditPopup(QDialog):
 
 class Table(QFrame):
 
-    def __init__(self, parent=None):
+    def __init__(self, log: LogStream, parent=None):
         super().__init__(parent)
+
+        self.log = log
 
         self.resize(500, 300)
         self.setAcceptDrops(True)
@@ -163,6 +166,11 @@ class Table(QFrame):
         self.buttonLoad.setText('&Load')
         self.buttonLoad.clicked.connect(self.loadFile)
         self.verticalLayout.addWidget(self.buttonLoad)
+
+        self.buttonSave = QPushButton(self)
+        self.buttonSave.setText('&Save')
+        self.buttonSave.clicked.connect(self.saveFile)
+        self.verticalLayout.addWidget(self.buttonSave)
 
         self.verticalSpacer = QSpacerItem(
             20, 40,
@@ -215,6 +223,7 @@ class Table(QFrame):
 
     def setButtons(self, b: bool):
         self.buttonLoad.setEnabled(b)
+        self.buttonSave.setEnabled(b)
         self.buttonNew.setEnabled(b)
         self.setButtonsSelection(b)
 
@@ -252,11 +261,13 @@ class Table(QFrame):
             try:
                 f = float(self.table.item(ed, 1).text())
             except:
+                self.log.warn(f'row {ed}: unknown flow rate')
                 f = 0.0
             self.editPopup.flow_rate.setValue(f)
             try:
                 t = int(self.table.item(ed, 2).text())
             except:
+                self.log.warn(f'row {ed}: unknown time')
                 t = 0
             self.editPopup.time.setValue(t)
             self.editPopup.popup(ed, False)
@@ -315,6 +326,7 @@ class Table(QFrame):
         self.loadCSV(_noPre('file:///', url))
 
     def loadCSV(self, name: str):
+        self.log.info(f'loaded file: {name}')
         self.table.setRowCount(0)
         with open(name, newline='', encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
@@ -325,6 +337,21 @@ class Table(QFrame):
                 for i in [0, 1, 2]:
                     self.table.setItem(r, i, QTableWidgetItem(row[i]))
 
+    def saveFile(self):
+        file, _ = QFileDialog.getSaveFileName(self, "Save File",
+            "", "CSV File (*.csv)"
+        )
+        if len(file) == 0:
+            return
+        self.log.info(f'saved as file: {file}')
+        row = self.table.rowCount()
+        with open(file, 'w', newline='', encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            for i in range(row):
+                writer.writerow([
+                    self.table.item(i, j).text() for j in range(3)
+                ])
+
 
 def _isCSV(url: str) -> bool:
     ext = os.path.splitext(url)[1]
@@ -334,13 +361,4 @@ def _noPre(prefix: str, text: str) -> str:
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
-
-# for testing
-if __name__ == "__main__":
-    import sys
-    app = QApplication(sys.argv)
-    form = Table()
-    form.show()
-    sys.exit(app.exec())
-
 

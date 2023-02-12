@@ -9,6 +9,7 @@ fail-under=7.0
 
 disable=
     invalid-name,
+    import-error,
     no-name-in-module,
     missing-docstring,
     too-many-statements,

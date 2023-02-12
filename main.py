@@ -26,11 +26,17 @@ class MainWindow(QMainWindow):
         self.gridLayout = QGridLayout(self.centralwidget)
         self.tabWidget = QTabWidget(self.centralwidget)
 
+        self.tab3 = QWidget()
+        self.gridLayout3 = QGridLayout(self.tab3)
+        self.logger = Logger(True, parent=self)
+        self.gridLayout3.addWidget(self.logger, 0, 0, 1, 1)
+        self.log = LogStream()
+        self.log.written.connect(self.logger.written)
+
         self.tab1 = QWidget()
         self.gridLayout1 = QGridLayout(self.tab1)
-        self.table = Table(self.tab1)
+        self.table = Table(self.log, self.tab1)
         self.gridLayout1.addWidget(self.table, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.tab1, "")
 
         self.tab2 = QWidget()
         self.gridLayout2 = QGridLayout(self.tab2)
@@ -39,7 +45,6 @@ class MainWindow(QMainWindow):
             parent=self
         )
         self.gridLayout2.addWidget(self.canvas, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.tab2, "")
 
         self.labelReagent = QLabel(self.tab2)
         self.gridLayout2.addWidget(self.labelReagent, 1, 0, 1, 1)
@@ -78,12 +83,8 @@ class MainWindow(QMainWindow):
         self.statusbar = QStatusBar(self)
         self.setStatusBar(self.statusbar)
 
-        self.tab3 = QWidget()
-        self.gridLayout3 = QGridLayout(self.tab3)
-        self.logger = Logger(True, parent=self)
-        self.gridLayout3.addWidget(self.logger, 0, 0, 1, 1)
-        self.log = LogStream()
-        self.log.written.connect(self.logger.written)
+        self.tabWidget.addTab(self.tab1, "")
+        self.tabWidget.addTab(self.tab2, "")
         self.tabWidget.addTab(self.tab3, "")
 
         self.tabWidget.setCurrentIndex(1)
