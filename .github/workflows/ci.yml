@@ -18,6 +18,7 @@ jobs:
         run: |
           pip3 install pylint 
       - name: run pylint
+        run: |
           pylint ./main.py
           pylint ./canvas/canvas.py
           pylint ./port/port.py
