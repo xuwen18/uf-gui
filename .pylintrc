@@ -1,6 +1,6 @@
 [pylint]
 
-unsafe-load-any-extension=y
+extension-pkg-allow-list=PySide6
 
 fail-under=7.0
 
