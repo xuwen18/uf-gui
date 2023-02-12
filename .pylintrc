@@ -1,16 +1,11 @@
 [pylint]
 
-extension-pkg-whitelist=
-    PySide6,
-    PySide6-Addons,
-    PySide6-Essentials
+unsafe-load-any-extension=y
 
 fail-under=7.0
 
 disable=
     invalid-name,
-    import-error,
-    no-name-in-module,
     missing-docstring,
     too-many-statements,
     too-many-instance-attributes,
