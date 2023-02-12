@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from canvas.canvas import Canvas
 from table.table   import Table
 from port.port     import PortDialog
+from log.log       import Logger, LogStream
 
 
 class MainWindow(QMainWindow):
@@ -33,7 +34,10 @@ class MainWindow(QMainWindow):
 
         self.tab2 = QWidget()
         self.gridLayout2 = QGridLayout(self.tab2)
-        self.canvas = Canvas(getData=lambda i: math.cos(0.1*i), parent=self)
+        self.canvas = Canvas(
+            getData=lambda i: math.sin(0.1*i),
+            parent=self
+        )
         self.gridLayout2.addWidget(self.canvas, 0, 0, 1, 1)
         self.tabWidget.addTab(self.tab2, "")
 
@@ -74,11 +78,20 @@ class MainWindow(QMainWindow):
         self.statusbar = QStatusBar(self)
         self.setStatusBar(self.statusbar)
 
+        self.tab3 = QWidget()
+        self.gridLayout3 = QGridLayout(self.tab3)
+        self.logger = Logger(True, parent=self)
+        self.gridLayout3.addWidget(self.logger, 0, 0, 1, 1)
+        self.log = LogStream()
+        self.log.written.connect(self.logger.written)
+        self.tabWidget.addTab(self.tab3, "")
+
         self.tabWidget.setCurrentIndex(1)
 
         self.setWindowTitle('Microfluidics Control Program')
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab1), 'Commands')
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab2), 'Main')
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab3), 'Logs')
         self.labelReagent.setText('Reagent: ')
         self.labelFlow.setText('Flow rate: ')
         self.labelPressure.setText('Pressure: ')
@@ -86,10 +99,13 @@ class MainWindow(QMainWindow):
         self.buttonStart.setText('&Start')
         self.buttonPause.setText('&Pause')
 
+        self.log.debug("GUI started")
+
     def onConnect(self):
         serial = PortDialog.getSerial(self)
         if serial is not None:
             self.serial = serial
+            self.log.info(f"serial connected: {serial.portName()}")
 
 app = QApplication(sys.argv)
 w = MainWindow()

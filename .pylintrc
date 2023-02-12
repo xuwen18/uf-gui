@@ -11,5 +11,6 @@ disable=
     import-error,
     invalid-name,
     missing-docstring,
+    too-many-statements,
     too-many-instance-attributes,
     too-few-public-methods,

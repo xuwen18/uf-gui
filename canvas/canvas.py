@@ -19,14 +19,23 @@ class Canvas(QFrame):
     x: List[float] = 200*[0.0]
     y: List[float] = 200*[0.0]
 
-    def __init__(self, getData: Callable[[int], float], width=5, height=4, parent=None):
+    def __init__(self,
+        getData: Callable[[int], float],
+        interval=500,
+        width=5, height=4,
+        parent=None
+    ):
         super().__init__(parent)
         self.getData = getData
 
         fig = Figure(figsize=(width, height))
         self.fc = FigureCanvasQTAgg(figure=fig)
         self.ax = fig.add_subplot()
-        self.ani = FuncAnimation(fig, self.animate, frames=None, interval=100, repeat=False)
+        self.ani = FuncAnimation(
+            fig, self.animate,
+            frames=None, interval=interval,
+            repeat=False
+        )
 
         layout = QVBoxLayout()
         #toolbar = NavigationToolbar(self.fc, self)

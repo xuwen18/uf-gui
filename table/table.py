@@ -139,7 +139,7 @@ class Table(QFrame):
         self.horizontalLayout = QHBoxLayout()
 
         self.table = QTableWidget(self)
-        if (self.table.columnCount() < 3):
+        if self.table.columnCount() < 3:
             self.table.setColumnCount(3)
         self.table.setHorizontalHeaderItem(0, QTableWidgetItem('Reagent'))
         self.table.setHorizontalHeaderItem(1, QTableWidgetItem('Flow Rate'))
@@ -164,7 +164,10 @@ class Table(QFrame):
         self.buttonLoad.clicked.connect(self.loadFile)
         self.verticalLayout.addWidget(self.buttonLoad)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer = QSpacerItem(
+            20, 40,
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
+        )
         self.verticalLayout.addItem(self.verticalSpacer)
 
         self.buttonNew = QPushButton(self)
@@ -279,7 +282,7 @@ class Table(QFrame):
         if len(idx) > 0:
             ed = idx[0].row()
             self.moveRow(ed-1)
-            if ed > 0 and ed < self.table.rowCount():
+            if 0 < ed < self.table.rowCount():
                 self.table.selectRow(ed-1)
             else:
                 self.table.selectRow(ed)
@@ -313,7 +316,7 @@ class Table(QFrame):
 
     def loadCSV(self, name: str):
         self.table.setRowCount(0)
-        with open(name, newline='') as csvfile:
+        with open(name, newline='', encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 r = self.table.rowCount()
