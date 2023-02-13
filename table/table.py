@@ -328,49 +328,55 @@ class Table(QFrame):
 
     def loadCSV(self, name: str):
         self.table.setRowCount(0)
-        valid_res = ['None','1','2','3','4']
+
         with open(name, newline='', encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 r = self.table.rowCount()
+                if not self.checkCSV(name, r, row):
+                    self.table.setRowCount(0)
+                    return
+
                 self.table.insertRow(r)
-                if len(row) != 3:
-                    self.log.error(f'File "{name}", line {1+r}: wrong number of values')
-                    self.table.setRowCount(0)
-                    return
-
-                res = row[0]
-                if res not in valid_res:
-                    self.log.error(
-                        f'File "{name}", line {1+r}: unknown reservoir name "{res}"')
-                    self.table.setRowCount(0)
-                    return
-                self.table.setItem(r, 0, QTableWidgetItem(res))
-
-                flo = row[1]
-                try:
-                    f = float(flo)
-                    if not (0.0 <= f <= 80.0):
-                        raise ValueError
-                except ValueError:
-                    self.log.error(f'File "{name}", line {1+r}: bad flow rate "{flo}"')
-                    self.table.setRowCount(0)
-                    return
-                self.table.setItem(r, 1, QTableWidgetItem(flo))
-
-                sec = row[2]
-                try:
-                    i = int(sec)
-                    if i < 0:
-                        raise ValueError
-                except ValueError:
-                    self.log.error(f'File "{name}", line {1+r}: bad duration "{sec}"')
-                    self.table.setRowCount(0)
-                    return
-                self.table.setItem(r, 2, QTableWidgetItem(sec))
+                for i in [0, 1, 2]:
+                    self.table.setItem(r, i, QTableWidgetItem(row[i]))
 
         self.log.info(f'Loaded file "{name}"')
 
+
+    def checkCSV(self, name, r, row) -> bool:
+        csv_len = 3
+        valid_res = ['None','1','2','3','4']
+
+        if len(row) != csv_len:
+            self.log.error(f'File "{name}", line {1+r}: wrong number of values')
+            return False
+
+        res = row[0]
+        if res not in valid_res:
+            self.log.error(
+                f'File "{name}", line {1+r}: unknown reservoir name "{res}"')
+            return False
+
+        flo = row[1]
+        try:
+            f = float(flo)
+            if not 0.0 <= f <= 80.0:
+                raise ValueError
+        except ValueError:
+            self.log.error(f'File "{name}", line {1+r}: bad flow rate "{flo}"')
+            return False
+
+        sec = row[2]
+        try:
+            i = int(sec)
+            if i < 0:
+                raise ValueError
+        except ValueError:
+            self.log.error(f'File "{name}", line {1+r}: bad duration "{sec}"')
+            return False
+
+        return True
 
     def saveFile(self):
         file, _ = QFileDialog.getSaveFileName(self, "Save File",
