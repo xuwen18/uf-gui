@@ -25,7 +25,7 @@ class Logger(QTextEdit):
         QTextEdit.__init__(self, **kwargs)
         self.setReadOnly(True)
         self.isDebug = isDebug
-        d = datetime.now().strftime("%Y-%m-%d-%H%M%S")
+        d = datetime.now().strftime("%Y-%m-%d %H%M%S")
         os.makedirs(outdir, exist_ok=True)
         self.fname = outdir+'log '+d+'.log'
         # Install the custom output stream
@@ -35,6 +35,7 @@ class Logger(QTextEdit):
     @Slot(tuple)
     def written(self, arg):
         mode, text = arg
+        newline = "\n"
         if mode == 'DEBUG':
             if not self.isDebug:
                 return
@@ -57,7 +58,7 @@ class Logger(QTextEdit):
         self.ensureCursorVisible()
 
         with open(self.fname, "a", encoding="utf-8") as f:
-            f.write(msg+"\n")
+            f.write(msg+newline)
 
         if self.isDebug:
-            print(msg)
+            print(msg, end=newline)

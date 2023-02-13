@@ -102,18 +102,21 @@ class MainWindow(QMainWindow):
     def onRun(self):
         if self.canvas.timer.isActive():
             self.canvas.timer.stop()
-            self.log.info('paused')
+            self.log.info('Stopped')
             self.buttonStart.setText('&Start')
         else:
             self.canvas.timer.start()
-            self.log.info('started')
+            self.log.info('Started')
             self.buttonStart.setText('&Pause')
 
     def onConnect(self):
         serial = PortDialog.getSerial(self)
         if serial is not None:
             self.serial = serial
-            self.log.info(f"serial connected: {serial.portName()}")
+            self.log.info(f"Serial connected: {serial.portName()}")
+
+    def closeEvent(self, event):
+        self.log.debug("GUI closing")
 
 app = QApplication(sys.argv)
 w = MainWindow()

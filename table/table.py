@@ -69,6 +69,7 @@ class EditPopup(QDialog):
 
         self.flow_rate = QDoubleSpinBox(self)
         self.flow_rate.setSingleStep(0.01)
+        self.flow_rate.setRange(0.0, 80.0)
         self.gridLayout.addWidget(self.flow_rate, 6, 1, 1, 1)
 
         self.time = QSpinBox(self)
@@ -145,8 +146,8 @@ class Table(QFrame):
         if self.table.columnCount() < 3:
             self.table.setColumnCount(3)
         self.table.setHorizontalHeaderItem(0, QTableWidgetItem('Reservoir'))
-        self.table.setHorizontalHeaderItem(1, QTableWidgetItem('Flow Rate'))
-        self.table.setHorizontalHeaderItem(2, QTableWidgetItem('Time'))
+        self.table.setHorizontalHeaderItem(1, QTableWidgetItem('Flow Rate (uL/min)'))
+        self.table.setHorizontalHeaderItem(2, QTableWidgetItem('Time (sec)'))
         self.table.horizontalHeader().setMinimumSectionSize(100)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -260,14 +261,14 @@ class Table(QFrame):
             # TODO: handle errors
             try:
                 f = float(self.table.item(ed, 1).text())
-            except:
-                self.log.warn(f'row {ed}: unknown flow rate')
+            except ValueError:
+                self.log.warn(f'Row {ed}: unknown flow rate')
                 f = 0.0
             self.editPopup.flow_rate.setValue(f)
             try:
                 t = int(self.table.item(ed, 2).text())
-            except:
-                self.log.warn(f'row {ed}: unknown time')
+            except ValueError:
+                self.log.warn(f'Row {ed}: unknown time')
                 t = 0
             self.editPopup.time.setValue(t)
             self.editPopup.popup(ed, False)
@@ -281,7 +282,7 @@ class Table(QFrame):
                 self.table.selectRow(idx[0].row())
 
     def moveRow(self, row_upper: int):
-        if row_upper >= 0 and row_upper+1 < self.table.rowCount():
+        if 0 <= row_upper < self.table.rowCount()-1:
             for i in [0, 1, 2]:
                 a = self.table.takeItem(row_upper, i)
                 b = self.table.takeItem(row_upper+1, i)
@@ -303,7 +304,7 @@ class Table(QFrame):
         if len(idx) > 0:
             ed = idx[0].row()
             self.moveRow(ed)
-            if ed+1 > 0 and ed+1 < self.table.rowCount():
+            if 0 < (ed+1) < self.table.rowCount():
                 self.table.selectRow(ed+1)
             else:
                 self.table.selectRow(ed)
@@ -326,16 +327,50 @@ class Table(QFrame):
         self.loadCSV(_noPre('file:///', url))
 
     def loadCSV(self, name: str):
-        self.log.info(f'loaded file: {name}')
         self.table.setRowCount(0)
+        valid_res = ['None','1','2','3','4']
         with open(name, newline='', encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 r = self.table.rowCount()
                 self.table.insertRow(r)
-                assert len(row) == 3
-                for i in [0, 1, 2]:
-                    self.table.setItem(r, i, QTableWidgetItem(row[i]))
+                if len(row) != 3:
+                    self.log.error(f'File "{name}", line {1+r}: wrong number of values')
+                    self.table.setRowCount(0)
+                    return
+
+                res = row[0]
+                if res not in valid_res:
+                    self.log.error(
+                        f'File "{name}", line {1+r}: unknown reservoir name "{res}"')
+                    self.table.setRowCount(0)
+                    return
+                self.table.setItem(r, 0, QTableWidgetItem(res))
+
+                flo = row[1]
+                try:
+                    f = float(flo)
+                    if not (0.0 <= f <= 80.0):
+                        raise ValueError
+                except ValueError:
+                    self.log.error(f'File "{name}", line {1+r}: bad flow rate "{flo}"')
+                    self.table.setRowCount(0)
+                    return
+                self.table.setItem(r, 1, QTableWidgetItem(flo))
+
+                sec = row[2]
+                try:
+                    i = int(sec)
+                    if i < 0:
+                        raise ValueError
+                except ValueError:
+                    self.log.error(f'File "{name}", line {1+r}: bad duration "{sec}"')
+                    self.table.setRowCount(0)
+                    return
+                self.table.setItem(r, 2, QTableWidgetItem(sec))
+
+        self.log.info(f'Loaded file "{name}"')
+
 
     def saveFile(self):
         file, _ = QFileDialog.getSaveFileName(self, "Save File",
@@ -345,7 +380,6 @@ class Table(QFrame):
             self.saveCSV(file)
 
     def saveCSV(self, name: str):
-        self.log.info(f'saved as file: {name}')
         row = self.table.rowCount()
         with open(name, 'w', newline='', encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
@@ -353,6 +387,8 @@ class Table(QFrame):
                 writer.writerow([
                     self.table.item(i, j).text() for j in range(3)
                 ])
+
+        self.log.info(f'Saved as file  "{name}"')
 
 
 def _isCSV(url: str) -> bool:
