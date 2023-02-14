@@ -329,40 +329,41 @@ class Table(QFrame):
 
     def loadCSV(self, name: str):
         self.table.setRowCount(0)
-        loadedWithoutError = True
+        errors = 0
 
         with open(name, newline='', encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 r = self.table.rowCount()
-                gud, row = self.checkCSV(name, r, row)
-                loadedWithoutError = loadedWithoutError and gud
+                err, row = self.checkCSV(name, r, row)
+                errors += err
 
                 self.table.insertRow(r)
                 for i in range(3):
                     self.table.setItem(r, i, QTableWidgetItem(row[i]))
-        if loadedWithoutError:
+        if errors == 0:
             self.log.info(f'Loaded file "{name}"')
         else:
-            self.log.error(f'Loaded file "{name}" with error(s)')
-            QMessageBox.critical(self, "Error", f'Loaded file "{name}" with error(s)')
+            self.log.error(f'Loaded file "{name}" with {errors} error(s)')
+            QMessageBox.critical(self, "Error",
+                f'Loaded file "{name}" with {errors} error(s)')
 
 
-    def checkCSV(self, name: str, r: int, row: list[str]) -> tuple[bool, list[str]]:
+    def checkCSV(self, name: str, r: int, row: list[str]) -> tuple[int, list[str]]:
         csv_len = 3
         valid_res = ['None','1','2','3','4']
-        gud = True
+        err = 0
 
         if len(row) != csv_len:
             self.log.error(f'File "{name}", line {1+r}: wrong number of values')
-            return False, ["None", "0.0", "0"]
+            return 1, ["None", "0.0", "0"]
 
         res = row[0]
         if res not in valid_res:
             self.log.error(
                 f'File "{name}", line {1+r}: unknown reservoir name "{res}"')
             res = "None"
-            gud = False
+            err += 1
 
         flo = row[1]
         try:
@@ -372,7 +373,7 @@ class Table(QFrame):
         except ValueError:
             self.log.error(f'File "{name}", line {1+r}: bad flow rate "{flo}"')
             flo = "0.0"
-            gud = False
+            err += 1
 
         sec = row[2]
         try:
@@ -382,9 +383,9 @@ class Table(QFrame):
         except ValueError:
             self.log.error(f'File "{name}", line {1+r}: bad duration "{sec}"')
             sec = "0"
-            gud = False
+            err += 1
 
-        return gud, [res, flo, sec]
+        return err, [res, flo, sec]
 
     def saveFile(self):
         file, _ = QFileDialog.getSaveFileName(self, "Save File",
