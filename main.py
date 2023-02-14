@@ -95,9 +95,9 @@ class MainWindow(QMainWindow):
         self.tabWidget.setCurrentIndex(1)
 
         self.setWindowTitle('Microfluidics Control Program')
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab1), 'Commands')
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab2), 'Main')
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab3), 'Logs')
+        self.tabWidget.setTabText(0, 'Commands')
+        self.tabWidget.setTabText(1, 'Main')
+        self.tabWidget.setTabText(2, 'Logs')
         self.labelReservoir.setText('Reservoir: ')
         self.labelFlow.setText('Flow rate: ')
         self.labelPressure.setText('Pressure: ')

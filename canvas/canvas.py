@@ -7,7 +7,6 @@ matplotlib.use('Qt5Agg')
 
 from matplotlib.backends.backend_qt5agg import (
     FigureCanvasQTAgg,
-    NavigationToolbar2QT as NavigationToolbar
 )
 from matplotlib.figure import Figure
 
@@ -27,8 +26,6 @@ class Canvas(QFrame):
         self.ax = fig.add_subplot()
 
         layout = QVBoxLayout()
-        toolbar = NavigationToolbar(self.fc, self)
-        layout.addWidget(toolbar)
         layout.addWidget(self.fc)
         self.setLayout(layout)
 
@@ -39,12 +36,3 @@ class Canvas(QFrame):
         self.ax.clear()
         self.ax.plot(self.x, self.y)
         self.fc.draw()
-
-if __name__ == "__main__":
-    import sys
-    import math
-    app = QApplication(sys.argv)
-    c = Canvas(lambda i: math.cos(0.1 * i))
-    c.timer.start()
-    c.show()
-    sys.exit(app.exec())
