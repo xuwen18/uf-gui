@@ -129,7 +129,7 @@ class MainWindow(QMainWindow):
 
     def onTimeout(self):
         flowRate = 80*random.random()
-        pressure = 145*random.random()
+        pressure = 30*random.random()
         self.canvas.animate(self.i, flowRate)
         self.showData(
             random.choice(["None", "1", "2", "3", "4"]),

@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QFrame, QVBoxLayout, QApplication
+    QFrame, QVBoxLayout
 )
 
 import matplotlib

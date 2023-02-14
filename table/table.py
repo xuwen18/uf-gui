@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QGridLayout, QHBoxLayout, QVBoxLayout,
     QSpacerItem,
     QTableWidget, QTableWidgetItem, QHeaderView,
+    QMessageBox,
     QPushButton, QRadioButton,
     QSpinBox, QDoubleSpinBox,
     QFileDialog, QDialogButtonBox,
@@ -344,6 +345,7 @@ class Table(QFrame):
             self.log.info(f'Loaded file "{name}"')
         else:
             self.log.error(f'Loaded file "{name}" with error(s)')
+            QMessageBox.critical(self, "Error", f'Loaded file "{name}" with error(s)')
 
 
     def checkCSV(self, name: str, r: int, row: list[str]) -> tuple[bool, list[str]]:
