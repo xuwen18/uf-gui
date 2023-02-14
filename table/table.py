@@ -328,35 +328,39 @@ class Table(QFrame):
 
     def loadCSV(self, name: str):
         self.table.setRowCount(0)
+        loadedWithoutError = True
 
         with open(name, newline='', encoding="utf-8") as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
                 r = self.table.rowCount()
-                if not self.checkCSV(name, r, row):
-                    self.table.setRowCount(0)
-                    return
+                gud, row = self.checkCSV(name, r, row)
+                loadedWithoutError = loadedWithoutError and gud
 
                 self.table.insertRow(r)
-                for i in [0, 1, 2]:
+                for i in range(3):
                     self.table.setItem(r, i, QTableWidgetItem(row[i]))
+        if loadedWithoutError:
+            self.log.info(f'Loaded file "{name}"')
+        else:
+            self.log.error(f'Loaded file "{name}" with error(s)')
 
-        self.log.info(f'Loaded file "{name}"')
 
-
-    def checkCSV(self, name, r, row) -> bool:
+    def checkCSV(self, name: str, r: int, row: list[str]) -> tuple[bool, list[str]]:
         csv_len = 3
         valid_res = ['None','1','2','3','4']
+        gud = True
 
         if len(row) != csv_len:
             self.log.error(f'File "{name}", line {1+r}: wrong number of values')
-            return False
+            return False, ["None", "0.0", "0"]
 
         res = row[0]
         if res not in valid_res:
             self.log.error(
                 f'File "{name}", line {1+r}: unknown reservoir name "{res}"')
-            return False
+            res = "None"
+            gud = False
 
         flo = row[1]
         try:
@@ -365,7 +369,8 @@ class Table(QFrame):
                 raise ValueError
         except ValueError:
             self.log.error(f'File "{name}", line {1+r}: bad flow rate "{flo}"')
-            return False
+            flo = "0.0"
+            gud = False
 
         sec = row[2]
         try:
@@ -374,9 +379,10 @@ class Table(QFrame):
                 raise ValueError
         except ValueError:
             self.log.error(f'File "{name}", line {1+r}: bad duration "{sec}"')
-            return False
+            sec = "0"
+            gud = False
 
-        return True
+        return gud, [res, flo, sec]
 
     def saveFile(self):
         file, _ = QFileDialog.getSaveFileName(self, "Save File",
