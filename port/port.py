@@ -2,7 +2,7 @@ from typing import Optional
 
 from PySide6.QtGui        import Qt, QAction
 from PySide6.QtWidgets    import (
-    QApplication, QDialog, QLabel, QMenu,
+    QDialog, QLabel, QMenu,
     QGridLayout, QHBoxLayout,
     QPushButton, QDialogButtonBox,
 )
@@ -10,7 +10,7 @@ from PySide6.QtSerialPort import QSerialPort, QSerialPortInfo
 
 
 class PortDialog(QDialog):
-    selected_port: Optional[str] = None
+    selected: Optional[str] = None
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -46,39 +46,30 @@ class PortDialog(QDialog):
         self.label.setText('Connect port')
         self.buttonConnect.setText('search...')
 
-        serial_list = QSerialPortInfo.availablePorts()
+        serialList = QSerialPortInfo.availablePorts()
         ports_menu = QMenu(self.buttonBox)
         ports_menu.triggered.connect(self.selectPort)
-        for port in serial_list:
+        for port in serialList:
             ports_menu.addAction(port.portName())
 
         self.buttonConnect.setMenu(ports_menu)
 
     def selectPort(self, action: QAction):
-        self.selected_port = action.text()
-        self.buttonConnect.setText(self.selected_port)
+        self.selected = action.text()
+        self.buttonConnect.setText(self.selected)
         self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(True)
 
     def reject(self) -> None:
-        self.selected_port = None
+        self.selected = None
         return super().reject()
 
     @staticmethod
-    def getSerial(parent = None) -> Optional[QSerialPort]:
+    def getSerial(parent=None) -> Optional[QSerialPort]:
         dialog = PortDialog(parent)
         dialog.exec()
-        if dialog.selected_port is None:
+        if dialog.selected is None:
             return None
         return QSerialPort(
-            dialog.selected_port, parent,
+            dialog.selected, parent,
             baudRate=QSerialPort.BaudRate.Baud115200
         )
-
-
-# for testing
-if __name__ == "__main__":
-    import sys
-    app = QApplication(sys.argv)
-    form = PortDialog()
-    form.show()
-    sys.exit(app.exec())

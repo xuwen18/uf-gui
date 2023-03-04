@@ -15,6 +15,7 @@ from table.table   import Table
 from port.port     import PortDialog
 from log.log       import Logger, LogStream
 
+import const
 
 class MainWindow(QMainWindow):
     serial = None
@@ -68,6 +69,9 @@ class MainWindow(QMainWindow):
         self.buttonConnect.clicked.connect(self.onConnect)
         self.horizontalLayout.addWidget(self.buttonConnect)
 
+        self.labelPort = QLabel(self.tab2)
+        self.horizontalLayout.addWidget(self.labelPort)
+
         self.horizontalSpacer = QSpacerItem(
             40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
         )
@@ -101,6 +105,7 @@ class MainWindow(QMainWindow):
         self.labelReservoir.setText('Reservoir: ')
         self.labelFlow.setText('Flow rate: ')
         self.labelPressure.setText('Pressure: ')
+        self.labelPort.setText('')
         self.buttonConnect.setText('&Connect')
         self.buttonStart.setText('&Start')
         self.showData("None", 0.0, 0.0)
@@ -132,7 +137,7 @@ class MainWindow(QMainWindow):
         pressure = 30*random.random()
         self.canvas.animate(self.i, flowRate)
         self.showData(
-            random.choice(["None", "1", "2", "3", "4"]),
+            random.choice(const.RESERVOIR_NAMES),
             flowRate, pressure)
         self.i += 1
 
@@ -140,7 +145,9 @@ class MainWindow(QMainWindow):
         serial = PortDialog.getSerial(self)
         if serial is not None:
             self.serial = serial
-            self.log.info(f"Serial connected: {serial.portName()}")
+            name = serial.portName()
+            self.labelPort.setText(name)
+            self.log.info(f"Serial connected: {name}")
 
     def closeEvent(self, event):
         self.log.debug("GUI closing")

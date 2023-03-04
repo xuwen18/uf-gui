@@ -1,5 +1,7 @@
 import os
 
+import const
+
 from datetime import datetime
 
 from PySide6.QtGui     import QTextCursor
@@ -21,7 +23,7 @@ class LogStream(QObject):
 class Logger(QTextEdit):
     isDebug: bool
     fname: str
-    def __init__(self, isDebug: bool, outdir='./output/', **kwargs):
+    def __init__(self, isDebug: bool, outdir=const.OUT_DIR, **kwargs):
         QTextEdit.__init__(self, **kwargs)
         self.setReadOnly(True)
         self.isDebug = isDebug

@@ -18,15 +18,19 @@ from PySide6.QtWidgets import (
 
 from log.log import LogStream
 
+import const
+
 class EditPopup(QDialog):
-    _edit_row = -1
-    _delete_reject = False
+    _editRowNum = -1
+    _deleteReject = False
     def __init__(self,
+        log: LogStream,
         setItem:   Callable[[int, int, QTableWidgetItem], None],
         removeRow: Callable[[int], None],
         parent=None):
 
         super().__init__(parent)
+        self.log = log
         self._removeRow = removeRow
         self._setItem = setItem
         self.resize(400, 200)
@@ -49,23 +53,23 @@ class EditPopup(QDialog):
 
         self.radioButton_None = QRadioButton(self)
         self.radioButton_None.setChecked(True)
-        self.radioButton_None.setText('None')
+        self.radioButton_None.setText(const.RESERVOIR_NAMES[0])
         self.gridLayout.addWidget(self.radioButton_None, 0, 1, 1, 1)
 
         self.radioButton_1 = QRadioButton(self)
-        self.radioButton_1.setText('1')
+        self.radioButton_1.setText(const.RESERVOIR_NAMES[1])
         self.gridLayout.addWidget(self.radioButton_1, 1, 1, 1, 1)
 
         self.radioButton_2 = QRadioButton(self)
-        self.radioButton_2.setText('2')
+        self.radioButton_2.setText(const.RESERVOIR_NAMES[2])
         self.gridLayout.addWidget(self.radioButton_2, 2, 1, 1, 1)
 
         self.radioButton_3 = QRadioButton(self)
-        self.radioButton_3.setText('3')
+        self.radioButton_3.setText(const.RESERVOIR_NAMES[3])
         self.gridLayout.addWidget(self.radioButton_3, 3, 1, 1, 1)
 
         self.radioButton_4 = QRadioButton(self)
-        self.radioButton_4.setText('4')
+        self.radioButton_4.setText(const.RESERVOIR_NAMES[4])
         self.gridLayout.addWidget(self.radioButton_4, 4, 1, 1, 1)
 
         self.flow_rate = QDoubleSpinBox(self)
@@ -91,42 +95,45 @@ class EditPopup(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
-    def popup(self, edit_row: int, delete_reject: bool):
-        self._edit_row = edit_row
-        self._delete_reject = delete_reject
+    def popup(self, editRowNum: int, deleteReject: bool):
+        self._editRowNum = editRowNum
+        self._deleteReject = deleteReject
         self.show()
 
     def validEditRow(self):
-        assert self._edit_row != -1 #TODO: handle properly
-        return self._edit_row
+        if self._editRowNum < 0:
+            self.log.debug("Bad row")
+            exit(1)
+        return self._editRowNum
 
     def accept(self) -> None:
         if self.radioButton_1.isChecked():
-            r = '1'
+            r = 1
         elif self.radioButton_2.isChecked():
-            r = '2'
+            r = 2
         elif self.radioButton_3.isChecked():
-            r = '3'
+            r = 3
         elif self.radioButton_4.isChecked():
-            r = '4'
+            r = 4
         else:
-            r = 'None'
+            r = 0
+        r = const.RESERVOIR_NAMES[r]
         self._setItem(self.validEditRow(), 0, QTableWidgetItem(r))
         f = f'{self.flow_rate.value():.2f}'
         self._setItem(self.validEditRow(), 1, QTableWidgetItem(f))
         t = str(self.time.value())
         self._setItem(self.validEditRow(), 2, QTableWidgetItem(t))
 
-        self._edit_row = -1
-        self._delete_reject = False
+        self._editRowNum = -1
+        self._deleteReject = False
         return super().accept()
 
     def reject(self) -> None:
-        if self._delete_reject:
+        if self._deleteReject:
             self._removeRow(self.validEditRow())
 
-        self._edit_row = -1
-        self._delete_reject = False
+        self._editRowNum = -1
+        self._deleteReject = False
         return super().reject()
 
 class Table(QFrame):
@@ -158,6 +165,7 @@ class Table(QFrame):
         self.horizontalLayout.addWidget(self.table)
 
         self.editPopup = EditPopup(
+            log=self.log,
             setItem=self.table.setItem,
             removeRow=self.table.removeRow
         )
@@ -249,23 +257,26 @@ class Table(QFrame):
         if len(idx) > 0:
             ed = idx[0].row()
             r = self.table.item(ed, 0).text()
-            if r == '1':
+            if r == const.RESERVOIR_NAMES[0]:
+                self.editPopup.radioButton_None.setChecked(True)
+            elif r == const.RESERVOIR_NAMES[1]:
                 self.editPopup.radioButton_1.setChecked(True)
-            elif r == '2':
+            elif r == const.RESERVOIR_NAMES[2]:
                 self.editPopup.radioButton_2.setChecked(True)
-            elif r == '3':
+            elif r == const.RESERVOIR_NAMES[3]:
                 self.editPopup.radioButton_3.setChecked(True)
-            elif r == '4':
+            elif r == const.RESERVOIR_NAMES[4]:
                 self.editPopup.radioButton_4.setChecked(True)
             else:
-                self.editPopup.radioButton_None.setChecked(True)
-            # TODO: handle errors
+                self.log.warn(f'Row {ed}: unknown reservoir')
+
             try:
                 f = float(self.table.item(ed, 1).text())
             except ValueError:
                 self.log.warn(f'Row {ed}: unknown flow rate')
                 f = 0.0
             self.editPopup.flow_rate.setValue(f)
+
             try:
                 t = int(self.table.item(ed, 2).text())
             except ValueError:
@@ -350,19 +361,17 @@ class Table(QFrame):
 
 
     def checkCSV(self, name: str, r: int, row: list[str]) -> tuple[int, list[str]]:
-        csv_len = 3
-        valid_res = ['None','1','2','3','4']
         err = 0
 
-        if len(row) != csv_len:
+        if len(row) != const.CSV_LEN:
             self.log.error(f'File "{name}", line {1+r}: wrong number of values')
-            return 1, ["None", "0.0", "0"]
+            return 1, [const.RESERVOIR_NAMES[0], str(0.0), str(0)]
 
         res = row[0]
-        if res not in valid_res:
+        if res not in const.RESERVOIR_NAMES:
             self.log.error(
                 f'File "{name}", line {1+r}: unknown reservoir name "{res}"')
-            res = "None"
+            res = const.RESERVOIR_NAMES[0]
             err += 1
 
         flo = row[1]
@@ -372,7 +381,7 @@ class Table(QFrame):
                 raise ValueError
         except ValueError:
             self.log.error(f'File "{name}", line {1+r}: bad flow rate "{flo}"')
-            flo = "0.0"
+            flo = str(0.0)
             err += 1
 
         sec = row[2]
@@ -382,7 +391,7 @@ class Table(QFrame):
                 raise ValueError
         except ValueError:
             self.log.error(f'File "{name}", line {1+r}: bad duration "{sec}"')
-            sec = "0"
+            sec = str(0)
             err += 1
 
         return err, [res, flo, sec]

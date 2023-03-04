@@ -24,6 +24,7 @@ jobs:
       - name: Run pylint
         run: |
           pylint ./main.py
+          pylint ./const.py
           pylint ./canvas/canvas.py
           pylint ./log/log.py
           pylint ./port/port.py
