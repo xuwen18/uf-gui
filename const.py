@@ -1,3 +1,6 @@
 RESERVOIR_NAMES = ["None", "1", "2", "3", "4"]
 CSV_LEN = 3
 OUT_DIR = './output/'
+
+FLOW_RATE_MAX = 80.0
+DURATION_MAX = 86_400_000

@@ -1,5 +1,6 @@
 import os
 import csv
+import sys
 from typing import Callable
 
 from PySide6.QtCore    import Qt, QItemSelection
@@ -48,7 +49,7 @@ class EditPopup(QDialog):
         self.gridLayout.addWidget(self.label_2, 6, 0, 1, 1)
 
         self.label_3 = QLabel(self)
-        self.label_3.setText('Time (sec)')
+        self.label_3.setText('Duration (ms)')
         self.gridLayout.addWidget(self.label_3, 7, 0, 1, 1)
 
         self.radioButton_None = QRadioButton(self)
@@ -74,13 +75,13 @@ class EditPopup(QDialog):
 
         self.flow_rate = QDoubleSpinBox(self)
         self.flow_rate.setSingleStep(0.01)
-        self.flow_rate.setRange(0.0, 80.0)
+        self.flow_rate.setRange(0.0, const.FLOW_RATE_MAX)
         self.gridLayout.addWidget(self.flow_rate, 6, 1, 1, 1)
 
-        self.time = QSpinBox(self)
-        self.time.setRange(0, 100000)
-        self.time.setSingleStep(10)
-        self.gridLayout.addWidget(self.time, 7, 1, 1, 1)
+        self.duration = QSpinBox(self)
+        self.duration.setRange(0, const.DURATION_MAX)
+        self.duration.setSingleStep(10)
+        self.gridLayout.addWidget(self.duration, 7, 1, 1, 1)
 
         self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
 
@@ -103,7 +104,7 @@ class EditPopup(QDialog):
     def validEditRow(self):
         if self._editRowNum < 0:
             self.log.debug("Bad row")
-            exit(1)
+            sys.exit(1)
         return self._editRowNum
 
     def accept(self) -> None:
@@ -121,7 +122,7 @@ class EditPopup(QDialog):
         self._setItem(self.validEditRow(), 0, QTableWidgetItem(r))
         f = f'{self.flow_rate.value():.2f}'
         self._setItem(self.validEditRow(), 1, QTableWidgetItem(f))
-        t = str(self.time.value())
+        t = str(self.duration.value())
         self._setItem(self.validEditRow(), 2, QTableWidgetItem(t))
 
         self._editRowNum = -1
@@ -155,7 +156,7 @@ class Table(QFrame):
             self.table.setColumnCount(3)
         self.table.setHorizontalHeaderItem(0, QTableWidgetItem('Reservoir'))
         self.table.setHorizontalHeaderItem(1, QTableWidgetItem('Flow Rate (uL/min)'))
-        self.table.setHorizontalHeaderItem(2, QTableWidgetItem('Time (sec)'))
+        self.table.setHorizontalHeaderItem(2, QTableWidgetItem('Duration (ms)'))
         self.table.horizontalHeader().setMinimumSectionSize(100)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -249,7 +250,7 @@ class Table(QFrame):
             ed = self.table.rowCount()
         self.table.insertRow(ed)
         self.editPopup.flow_rate.setValue(0.0)
-        self.editPopup.time.setValue(0)
+        self.editPopup.duration.setValue(0)
         self.editPopup.popup(ed, True)
 
     def editRow(self):
@@ -280,9 +281,9 @@ class Table(QFrame):
             try:
                 t = int(self.table.item(ed, 2).text())
             except ValueError:
-                self.log.warn(f'Row {ed}: unknown time')
+                self.log.warn(f'Row {ed}: unknown duration')
                 t = 0
-            self.editPopup.time.setValue(t)
+            self.editPopup.duration.setValue(t)
             self.editPopup.popup(ed, False)
 
     def deleteRow(self):
@@ -377,24 +378,24 @@ class Table(QFrame):
         flo = row[1]
         try:
             f = float(flo)
-            if not 0.0 <= f <= 80.0:
+            if not 0.0 <= f <= const.FLOW_RATE_MAX:
                 raise ValueError
         except ValueError:
             self.log.error(f'File "{name}", line {1+r}: bad flow rate "{flo}"')
             flo = str(0.0)
             err += 1
 
-        sec = row[2]
+        msec = row[2]
         try:
-            i = int(sec)
-            if i < 0:
+            i = int(msec)
+            if not 0 <= i <= const.DURATION_MAX:
                 raise ValueError
         except ValueError:
-            self.log.error(f'File "{name}", line {1+r}: bad duration "{sec}"')
-            sec = str(0)
+            self.log.error(f'File "{name}", line {1+r}: bad duration "{msec}"')
+            msec = str(0)
             err += 1
 
-        return err, [res, flo, sec]
+        return err, [res, flo, msec]
 
     def saveFile(self):
         file, _ = QFileDialog.getSaveFileName(self, "Save File",
@@ -423,4 +424,3 @@ def _noPre(prefix: str, text: str) -> str:
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
-

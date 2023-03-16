@@ -1,8 +1,7 @@
 import os
+from datetime import datetime
 
 import const
-
-from datetime import datetime
 
 from PySide6.QtGui     import QTextCursor
 from PySide6.QtCore    import QObject, Signal, Slot
