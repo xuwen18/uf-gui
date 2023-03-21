@@ -161,6 +161,7 @@ class Table(QFrame):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.selectionModel().selectionChanged.connect(self.onSelectionChange)
         self.horizontalLayout.addWidget(self.table)
@@ -232,11 +233,29 @@ class Table(QFrame):
         self.buttonUp.setEnabled(b)
         self.buttonDown.setEnabled(b)
 
-    def setButtons(self, b: bool):
+    def setButtonsOthers(self, b: bool):
         self.buttonLoad.setEnabled(b)
         self.buttonSave.setEnabled(b)
         self.buttonNew.setEnabled(b)
+
+    def setButtons(self, b: bool):
+        self.setButtonsOthers(b)
         self.setButtonsSelection(b)
+
+    def antifreeze(self):
+        self.setButtonsOthers(True)
+        self.table.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+
+    def freeze(self):
+        self.setButtonsOthers(False)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+
+    def selectFrozen(self, row):
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.selectRow(row)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
 
     def onSelectionChange(self, selected: QItemSelection, deselected: QItemSelection):
         idx = selected.indexes()
@@ -321,6 +340,14 @@ class Table(QFrame):
                 self.table.selectRow(ed+1)
             else:
                 self.table.selectRow(ed)
+
+    def getRow(self, row: int) -> tuple[bool, str, float, int]:
+        if row >= self.table.rowCount():
+            return (False, "None", 0.0, 0)
+        res = self.table.item(row, 0).text()
+        flo = float(self.table.item(row, 1).text())
+        msec = int(self.table.item(row, 2).text())
+        return (True, res, flo, msec)
 
     def loadFile(self):
         file, _ = QFileDialog.getOpenFileName(self, "Open File",

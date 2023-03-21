@@ -29,3 +29,4 @@ jobs:
           pylint ./log/log.py
           pylint ./port/port.py
           pylint ./table/table.py
+          pylint ./runner/runner.py

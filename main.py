@@ -2,7 +2,7 @@ import sys
 # dummy
 import random
 
-from PySide6.QtCore    import Qt, QRect, QTimer
+from PySide6.QtCore    import Qt, QRect, QByteArray, QTimer, QIODevice
 from PySide6.QtWidgets import (
     QWidget, QMainWindow, QGridLayout, QTabWidget,
     QLabel, QHBoxLayout, QPushButton, QSpacerItem,
@@ -14,13 +14,14 @@ from canvas.canvas import Canvas
 from table.table   import Table
 from port.port     import PortDialog
 from log.log       import Logger, LogStream
+from runner.runner import Runner
 
 import const
 
 class MainWindow(QMainWindow):
     serial = None
 
-    def __init__(self, interval=1000, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.resize(800, 600)
         self.centralwidget = QWidget(self)
@@ -63,6 +64,12 @@ class MainWindow(QMainWindow):
         self.dataPressure.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.gridLayout2.addWidget(self.dataPressure, 3, 1, 1, 1)
 
+        self.labelDuration = QLabel(self.tab2)
+        self.gridLayout2.addWidget(self.labelDuration, 4, 0, 1, 1)
+        self.dataDuration = QLabel(self.tab2)
+        self.dataDuration.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.gridLayout2.addWidget(self.dataDuration, 4, 1, 1, 1)
+
         self.horizontalLayout = QHBoxLayout()
 
         self.buttonConnect = QPushButton(self.tab2)
@@ -81,7 +88,7 @@ class MainWindow(QMainWindow):
         self.buttonStart.clicked.connect(self.onRun)
         self.horizontalLayout.addWidget(self.buttonStart)
 
-        self.gridLayout2.addLayout(self.horizontalLayout, 4, 0, 1, 2)
+        self.gridLayout2.addLayout(self.horizontalLayout, 5, 0, 1, 2)
 
         self.gridLayout.addWidget(self.tabWidget, 0, 1, 1, 1)
 
@@ -103,56 +110,95 @@ class MainWindow(QMainWindow):
         self.tabWidget.setTabText(1, 'Main')
         self.tabWidget.setTabText(2, 'Logs')
         self.labelReservoir.setText('Reservoir: ')
-        self.labelFlow.setText('Flow rate: ')
-        self.labelPressure.setText('Pressure: ')
+        self.labelFlow.setText('Flow rate (uL/min): ')
+        self.labelPressure.setText('Pressure (psi): ')
+        self.labelDuration.setText('Elapsed time (ms): ')
         self.labelPort.setText('')
         self.buttonConnect.setText('&Connect')
         self.buttonStart.setText('&Start')
-        self.showData("None", 0.0, 0.0)
+        self.showData("None", 0.0, 0.0, 0)
+
+        # self.buttonStart.setEnabled(False)
 
         self.log.debug("GUI started")
 
-        self.timer = QTimer(self)
-        self.timer.setInterval(interval)
-        self.timer.timeout.connect(self.onTimeout)
+        self.interval = const.INTERVAL
+        self.dataTimer = QTimer(self)
+        self.dataTimer.setInterval(self.interval)
+        self.dataTimer.timeout.connect(self.onDataTimeout)
         self.i = 0
 
-    def showData(self, numReservoir, flowRate, pressure):
+        self.runner = Runner(
+            self, self.start, self.stop,
+            self.table.getRow, self.sendText
+        )
+
+    def showData(self, numReservoir, flowRate, pressure, duration):
         self.dataReservoir.setText(f'{numReservoir}')
         self.dataFlow.setText(f'{flowRate:.3f}')
         self.dataPressure.setText(f'{pressure:.3f}')
+        self.dataDuration.setText(f'{duration}')
+
+    def stop(self):
+        # self.table.antifreeze()
+        self.dataTimer.stop()
+        self.log.info('Stopped')
+        self.buttonStart.setText('&Start')
+
+    def start(self):
+        # self.table.freeze()
+        # self.table.selectFrozen(0)
+        self.dataTimer.start()
+        self.log.info('Started')
+        self.buttonStart.setText('&Stop')
 
     def onRun(self):
-        if self.timer.isActive():
-            self.timer.stop()
-            self.log.info('Stopped')
-            self.buttonStart.setText('&Start')
+        if self.dataTimer.isActive():
+            self.runner.reset()
         else:
-            self.timer.start()
-            self.log.info('Started')
-            self.buttonStart.setText('&Pause')
+            self.runner.begin()
 
-    def onTimeout(self):
+    def onDataTimeout(self):
+        self.i += 1
         flowRate = 80*random.random()
         pressure = 30*random.random()
         self.canvas.animate(self.i, flowRate, pressure)
         self.showData(
             random.choice(const.RESERVOIR_NAMES),
-            flowRate, pressure)
-        self.i += 1
+            flowRate, pressure, self.interval*self.i)
+        # bytes = self.serial.readAll()
+        # self.log.info(f'Serial read "{bytes.data().decode()}"')
 
     def onConnect(self):
         serial = PortDialog.getSerial(self)
         if serial is not None:
-            self.serial = serial
             name = serial.portName()
-            self.labelPort.setText(name)
-            self.log.info(f"Serial connected: {name}")
+            if self.serial is not None:
+                self.serial.close()
+            if serial.open(QIODevice.OpenModeFlag.ReadWrite):
+                self.serial = serial
+                self.labelPort.setText(name)
+                self.log.info(f"Serial connected: {name}")
+
+                # self.buttonStart.setEnabled(True)
+            else:
+                self.serial = None
+                self.log.error(f'Failed to open serial port: {name}')
+
+                # self.buttonStart.setEnabled(False)
+
+    def sendText(self, text: str):
+        self.log.debug(f'Serial sent text "{text}"')
+        if self.serial is not None:
+            qba = QByteArray(text.encode())
+            self.serial.write(qba)
 
     def closeEvent(self, event):
+        if self.serial is not None:
+            self.serial.close()
         self.log.debug("GUI closing")
 
 app = QApplication(sys.argv)
-w = MainWindow(500)
+w = MainWindow()
 w.show()
 app.exec()
