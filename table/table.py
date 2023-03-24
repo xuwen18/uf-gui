@@ -4,7 +4,7 @@ import sys
 from typing import Callable
 
 from PySide6.QtCore    import Qt, QItemSelection
-from PySide6.QtGui     import QDragEnterEvent, QDropEvent
+from PySide6.QtGui     import QDragEnterEvent, QDropEvent, QColor, QBrush
 from PySide6.QtWidgets import (
     QDialog, QFrame, QLabel,
     QGridLayout, QHBoxLayout, QVBoxLayout,
@@ -125,6 +125,8 @@ class EditPopup(QDialog):
         t = str(self.duration.value())
         self._setItem(self.validEditRow(), 2, QTableWidgetItem(t))
 
+        self._setItem(self.validEditRow(), 3, QTableWidgetItem(const.STATUS_PENDING))
+
         self._editRowNum = -1
         self._deleteReject = False
         return super().accept()
@@ -152,13 +154,16 @@ class Table(QFrame):
         self.horizontalLayout = QHBoxLayout()
 
         self.table = QTableWidget(self)
-        if self.table.columnCount() < 3:
-            self.table.setColumnCount(3)
+        if self.table.columnCount() < const.TABLE_COL:
+            self.table.setColumnCount(const.TABLE_COL)
+        self.table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table.setHorizontalHeaderItem(0, QTableWidgetItem('Reservoir'))
         self.table.setHorizontalHeaderItem(1, QTableWidgetItem('Flow Rate (uL/min)'))
         self.table.setHorizontalHeaderItem(2, QTableWidgetItem('Duration (ms)'))
-        self.table.horizontalHeader().setMinimumSectionSize(100)
+        self.table.setHorizontalHeaderItem(3, QTableWidgetItem('Status'))
+        self.table.horizontalHeader().setMinimumSectionSize(const.TABLE_WID)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.setMinimumWidth(24+const.TABLE_WID*const.TABLE_COL)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.table.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
@@ -341,13 +346,22 @@ class Table(QFrame):
             else:
                 self.table.selectRow(ed)
 
-    def getRow(self, row: int) -> tuple[bool, str, float, int]:
+    def updateRow(self, row: int) -> tuple[bool, str, float, int]:
+        if row > 0:
+            item = QTableWidgetItem(const.STATUS_DONE)
+            item.setForeground(QBrush(QColor(0, 255, 0)))
+            self.table.setItem(row-1, 3, item)
         if row >= self.table.rowCount():
             return (False, "None", 0.0, 0)
+        self.table.setItem(row, 3, QTableWidgetItem(const.STATUS_RUNNING))
         res = self.table.item(row, 0).text()
         flo = float(self.table.item(row, 1).text())
         msec = int(self.table.item(row, 2).text())
         return (True, res, flo, msec)
+
+    def resetStatus(self):
+        for i in range(self.table.rowCount()):
+            self.table.setItem(i, 3, QTableWidgetItem(const.STATUS_PENDING))
 
     def loadFile(self):
         file, _ = QFileDialog.getOpenFileName(self, "Open File",
@@ -378,7 +392,8 @@ class Table(QFrame):
                 errors += err
 
                 self.table.insertRow(r)
-                for i in range(3):
+                self.table.setItem(r, 3, QTableWidgetItem(const.STATUS_PENDING))
+                for i in range(const.CSV_LEN):
                     self.table.setItem(r, i, QTableWidgetItem(row[i]))
         if errors == 0:
             self.log.info(f'Loaded file "{name}"')
@@ -437,11 +452,10 @@ class Table(QFrame):
             writer = csv.writer(csvfile, delimiter=',')
             for i in range(row):
                 writer.writerow([
-                    self.table.item(i, j).text() for j in range(3)
+                    self.table.item(i, j).text() for j in range(const.CSV_LEN)
                 ])
 
         self.log.info(f'Saved as file  "{name}"')
-
 
 def _isCSV(url: str) -> bool:
     ext = os.path.splitext(url)[1]

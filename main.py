@@ -4,9 +4,10 @@ import random
 
 from PySide6.QtCore    import Qt, QRect, QByteArray, QTimer, QIODevice
 from PySide6.QtWidgets import (
-    QWidget, QMainWindow, QGridLayout, QTabWidget,
+    QWidget, QMainWindow, QGridLayout,
     QLabel, QHBoxLayout, QPushButton, QSpacerItem,
     QSizePolicy, QMenuBar, QStatusBar,
+    QDockWidget,
     QApplication
 )
 
@@ -23,15 +24,14 @@ class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.resize(800, 600)
+        self.resize(1280, 720)
         self.centralwidget = QWidget(self)
 
         self.gridLayout = QGridLayout(self.centralwidget)
-        self.tabWidget = QTabWidget(self.centralwidget)
 
         self.tab3 = QWidget()
         self.gridLayout3 = QGridLayout(self.tab3)
-        self.logger = Logger(True, parent=self)
+        self.logger = Logger(parent=self)
         self.gridLayout3.addWidget(self.logger, 0, 0, 1, 1)
         self.log = LogStream()
         self.log.written.connect(self.logger.written)
@@ -90,7 +90,7 @@ class MainWindow(QMainWindow):
 
         self.gridLayout2.addLayout(self.horizontalLayout, 5, 0, 1, 2)
 
-        self.gridLayout.addWidget(self.tabWidget, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.tab2, 0, 1, 1, 1)
 
         self.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(self)
@@ -99,16 +99,22 @@ class MainWindow(QMainWindow):
         self.statusbar = QStatusBar(self)
         self.setStatusBar(self.statusbar)
 
-        self.tabWidget.addTab(self.tab1, "")
-        self.tabWidget.addTab(self.tab2, "")
-        self.tabWidget.addTab(self.tab3, "")
-
-        self.tabWidget.setCurrentIndex(1)
+        self.dock1 = QDockWidget("", self)
+        self.dock1.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+            QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.dock1)
+        self.dock1.setWidget(self.tab1)
+        self.dock3 = QDockWidget("", self)
+        self.dock3.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+            QDockWidget.DockWidgetFeature.DockWidgetMovable)
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.dock3)
+        self.dock3.setWidget(self.tab3)
 
         self.setWindowTitle('Microfluidics Control Program')
-        self.tabWidget.setTabText(0, 'Commands')
-        self.tabWidget.setTabText(1, 'Main')
-        self.tabWidget.setTabText(2, 'Logs')
+        self.dock1.setWindowTitle("Commands")
+        self.dock3.setWindowTitle("Logs")
         self.labelReservoir.setText('Reservoir: ')
         self.labelFlow.setText('Flow rate (uL/min): ')
         self.labelPressure.setText('Pressure (psi): ')
@@ -118,7 +124,7 @@ class MainWindow(QMainWindow):
         self.buttonStart.setText('&Start')
         self.showData("None", 0.0, 0.0, 0)
 
-        # self.buttonStart.setEnabled(False)
+        self.buttonStart.setEnabled(False)
 
         self.log.debug("GUI started")
 
@@ -130,7 +136,7 @@ class MainWindow(QMainWindow):
 
         self.runner = Runner(
             self, self.start, self.stop,
-            self.table.getRow, self.sendText
+            self.table.updateRow, self.sendText
         )
 
     def showData(self, numReservoir, flowRate, pressure, duration):
@@ -144,6 +150,7 @@ class MainWindow(QMainWindow):
         self.dataTimer.stop()
         self.log.info('Stopped')
         self.buttonStart.setText('&Start')
+        self.i = 0
 
     def start(self):
         # self.table.freeze()
@@ -151,6 +158,8 @@ class MainWindow(QMainWindow):
         self.dataTimer.start()
         self.log.info('Started')
         self.buttonStart.setText('&Stop')
+        self.table.resetStatus()
+        self.canvas.reset()
 
     def onRun(self):
         if self.dataTimer.isActive():
@@ -160,14 +169,15 @@ class MainWindow(QMainWindow):
 
     def onDataTimeout(self):
         self.i += 1
+        dur = self.interval*self.i
         flowRate = 80*random.random()
         pressure = 30*random.random()
-        self.canvas.animate(self.i, flowRate, pressure)
+        self.canvas.animate(dur, flowRate, pressure)
         self.showData(
             random.choice(const.RESERVOIR_NAMES),
-            flowRate, pressure, self.interval*self.i)
-        # bytes = self.serial.readAll()
-        # self.log.info(f'Serial read "{bytes.data().decode()}"')
+            flowRate, pressure, dur)
+        bytes = self.serial.readAll()
+        self.log.info(f'Serial read "{bytes.data().decode()}"')
 
     def onConnect(self):
         serial = PortDialog.getSerial(self)
@@ -180,17 +190,17 @@ class MainWindow(QMainWindow):
                 self.labelPort.setText(name)
                 self.log.info(f"Serial connected: {name}")
 
-                # self.buttonStart.setEnabled(True)
+                self.buttonStart.setEnabled(True)
             else:
                 self.serial = None
                 self.log.error(f'Failed to open serial port: {name}')
 
-                # self.buttonStart.setEnabled(False)
+                self.buttonStart.setEnabled(False)
 
     def sendText(self, text: str):
         self.log.debug(f'Serial sent text "{text}"')
         if self.serial is not None:
-            qba = QByteArray(text.encode())
+            qba = QByteArray(text.encode("utf-8"))
             self.serial.write(qba)
 
     def closeEvent(self, event):

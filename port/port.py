@@ -8,6 +8,7 @@ from PySide6.QtWidgets    import (
 )
 from PySide6.QtSerialPort import QSerialPort, QSerialPortInfo
 
+import const
 
 class PortDialog(QDialog):
     selected: Optional[str] = None
@@ -65,6 +66,7 @@ class PortDialog(QDialog):
 
     @staticmethod
     def getSerial(parent=None) -> Optional[QSerialPort]:
+        assert const.BAUD_RATE == 115200
         dialog = PortDialog(parent)
         dialog.exec()
         if dialog.selected is None:

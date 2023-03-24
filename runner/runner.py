@@ -9,13 +9,13 @@ class Runner:
         self, parent,
         start: Callable[[], None],
         stop: Callable[[], None],
-        getRow: Callable[[int], tuple[bool, str, float, int]],
+        updateRow: Callable[[int], tuple[bool, str, float, int]],
         sendText: Callable[[str], None]
     ):
-        self.start = start
-        self.stop = stop
+        self._start = start
+        self._stop = stop
         self.parent = parent
-        self.getRow = getRow
+        self.updateRow = updateRow
         self.sendText = sendText
 
         self.i = 0
@@ -27,14 +27,14 @@ class Runner:
         if self.timer is not None:
             self.timer.stop()
         self.timer = None
-        self.stop()
+        self._stop()
 
     def begin(self):
-        self.start()
+        self._start()
         self.update()
 
     def update(self):
-        valid, res, flo, msec = self.getRow(self.i)
+        valid, res, flo, msec = self.updateRow(self.i)
         if not valid:
             self.reset()
             return
@@ -52,5 +52,5 @@ class Runner:
         self.timer.start()
 
 def _getText(reservoir: str, flowRate: float):
-    return f'{const.RESERVOIR_INDEX[reservoir]},{flowRate:.3f}'
+    return f',{const.RESERVOIR_INDEX[reservoir]},{flowRate:.3f}'
 

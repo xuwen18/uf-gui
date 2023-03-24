@@ -22,10 +22,9 @@ class LogStream(QObject):
 class Logger(QTextEdit):
     isDebug: bool
     fname: str
-    def __init__(self, isDebug: bool, outdir=const.OUT_DIR, **kwargs):
+    def __init__(self, outdir=const.OUT_DIR, **kwargs):
         QTextEdit.__init__(self, **kwargs)
         self.setReadOnly(True)
-        self.isDebug = isDebug
         d = datetime.now().strftime("%Y-%m-%d %H%M%S")
         os.makedirs(outdir, exist_ok=True)
         self.fname = outdir+'log '+d+'.log'
@@ -38,7 +37,7 @@ class Logger(QTextEdit):
         mode, text = arg
         newline = "\n"
         if mode == 'DEBUG':
-            if not self.isDebug:
+            if not const.IS_DEBUG:
                 return
             color = '#000000'
         elif mode == 'ERROR':
@@ -61,5 +60,5 @@ class Logger(QTextEdit):
         with open(self.fname, "a", encoding="utf-8") as f:
             f.write(msg+newline)
 
-        if self.isDebug:
+        if const.IS_DEBUG:
             print(msg, end=newline)
