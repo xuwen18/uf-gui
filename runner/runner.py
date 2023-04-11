@@ -5,6 +5,9 @@ from PySide6.QtCore import QTimer
 import const
 
 class Runner:
+    current_res = const.RESERVOIR_NAMES[0]
+    current_flo = 0.0
+    current_msec = 0
     def __init__(
         self, parent,
         start: Callable[[], None],
@@ -23,6 +26,9 @@ class Runner:
         self.timer: Union[QTimer, None] = None
 
     def reset(self):
+        self.current_res = const.RESERVOIR_NAMES[0]
+        self.current_flo = 0.0
+        self.current_msec = 0
         self.i = 0
         if self.timer is not None:
             self.timer.stop()
@@ -38,6 +44,10 @@ class Runner:
         if not valid:
             self.reset()
             return
+
+        self.current_res = res
+        self.current_flo = flo
+        self.current_msec = msec
 
         self.i += 1
 

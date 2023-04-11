@@ -1,8 +1,8 @@
 import sys
-# dummy
-import random
 
-from PySide6.QtCore    import Qt, QRect, QByteArray, QTimer, QIODevice
+import parse
+
+from PySide6.QtCore    import Qt, QRect, QByteArray, QElapsedTimer, QIODevice
 from PySide6.QtWidgets import (
     QWidget, QMainWindow, QGridLayout,
     QLabel, QHBoxLayout, QPushButton, QSpacerItem,
@@ -21,6 +21,8 @@ import const
 
 class MainWindow(QMainWindow):
     serial = None
+
+    buffer = QByteArray(b"")
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -124,15 +126,12 @@ class MainWindow(QMainWindow):
         self.buttonStart.setText('&Start')
         self.showData("None", 0.0, 0.0, 0)
 
-        self.buttonStart.setEnabled(False)
+        #self.buttonStart.setEnabled(False)
 
         self.log.debug("GUI started")
 
-        self.interval = const.INTERVAL
-        self.dataTimer = QTimer(self)
-        self.dataTimer.setInterval(self.interval)
-        self.dataTimer.timeout.connect(self.onDataTimeout)
-        self.i = 0
+        self.timer = QElapsedTimer()
+        self.is_running = False
 
         self.runner = Runner(
             self, self.start, self.stop,
@@ -147,37 +146,47 @@ class MainWindow(QMainWindow):
 
     def stop(self):
         # self.table.antifreeze()
-        self.dataTimer.stop()
         self.log.info('Stopped')
         self.buttonStart.setText('&Start')
         self.i = 0
+        self.is_running = False
+        self.serial.readyRead.disconnect(self.onReadyRead)
 
     def start(self):
         # self.table.freeze()
         # self.table.selectFrozen(0)
-        self.dataTimer.start()
+        self.timer.start()
         self.log.info('Started')
         self.buttonStart.setText('&Stop')
         self.table.resetStatus()
         self.canvas.reset()
+        self.is_running = True
+        self.serial.readyRead.connect(self.onReadyRead)
 
     def onRun(self):
-        if self.dataTimer.isActive():
+        if self.is_running:
             self.runner.reset()
         else:
             self.runner.begin()
 
-    def onDataTimeout(self):
-        self.i += 1
-        dur = self.interval*self.i
-        flowRate = 80*random.random()
-        pressure = 30*random.random()
-        self.canvas.animate(dur, flowRate, pressure)
-        self.showData(
-            random.choice(const.RESERVOIR_NAMES),
-            flowRate, pressure, dur)
-        bytes = self.serial.readAll()
-        self.log.info(f'Serial read "{bytes.data().decode()}"')
+    def onReadyRead(self):
+        self.buffer.append(self.serial.readAll())
+        idx_l = self.buffer.lastIndexOf(b"[")
+        idx_r = self.buffer.lastIndexOf(b"]")
+        if idx_l != -1 and idx_r != -1 and idx_l < idx_r:
+            qba = self.buffer.mid(1+idx_l, idx_r-idx_l-1)
+            msg = qba.data().decode()
+            rslt = parse.parse('{:d},{:g}', msg)
+            if rslt is None:
+                self.log.error("Something wrong")
+                return
+            reservoir = rslt[0]
+            flowRate = rslt[1]
+            pressure = 0 # unknown
+            dur = self.timer.elapsed()
+            self.canvas.animate(dur, flowRate, self.runner.current_flo)
+            self.showData(reservoir,flowRate, pressure, dur)
+            self.log.info(f'Serial read "{msg}"')
 
     def onConnect(self):
         serial = PortDialog.getSerial(self)
@@ -190,12 +199,12 @@ class MainWindow(QMainWindow):
                 self.labelPort.setText(name)
                 self.log.info(f"Serial connected: {name}")
 
-                self.buttonStart.setEnabled(True)
+                #self.buttonStart.setEnabled(True)
             else:
                 self.serial = None
                 self.log.error(f'Failed to open serial port: {name}')
 
-                self.buttonStart.setEnabled(False)
+                #self.buttonStart.setEnabled(False)
 
     def sendText(self, text: str):
         self.log.debug(f'Serial sent text "{text}"')

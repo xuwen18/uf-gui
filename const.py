@@ -3,7 +3,7 @@ IS_DEBUG = True
 BAUD_RATE = 115200
 
 RESERVOIR_NAMES = ["None", "1", "2", "3", "4"]
-RESERVOIR_INDEX = dict(zip(RESERVOIR_NAMES, range(5)))
+RESERVOIR_INDEX = dict(zip(RESERVOIR_NAMES, range(-1,4)))
 CSV_LEN = 3
 OUT_DIR = './output/'
 
