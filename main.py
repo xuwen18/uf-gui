@@ -149,7 +149,6 @@ class MainWindow(QMainWindow):
         # self.table.antifreeze()
         self.log.info('Stopped')
         self.buttonStart.setText('&Start')
-        self.i = 0
         self.is_running = False
         self.serial.readyRead.disconnect(self.onReadyRead)
 
