@@ -1,4 +1,3 @@
-*.csv
 output/
 .vscode/
 trash.txt

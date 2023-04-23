@@ -124,7 +124,7 @@ class MainWindow(QMainWindow):
         self.labelPort.setText('')
         self.buttonConnect.setText('&Connect')
         self.buttonStart.setText('&Start')
-        self.showData("None", 0.0, 0.0, 0)
+        self.showData(-1, 0.0, 0.0, 0)
 
         #self.buttonStart.setEnabled(False)
 
@@ -139,7 +139,8 @@ class MainWindow(QMainWindow):
         )
 
     def showData(self, numReservoir, flowRate, pressure, duration):
-        self.dataReservoir.setText(f'{numReservoir}')
+        self.dataReservoir.setText(
+            f'{const.RESERVOIR_NAMES[1+numReservoir]}')
         self.dataFlow.setText(f'{flowRate:.3f}')
         self.dataPressure.setText(f'{pressure:.3f}')
         self.dataDuration.setText(f'{duration}')
@@ -178,7 +179,7 @@ class MainWindow(QMainWindow):
             msg = qba.data().decode()
             rslt = parse.parse('{:d},{:g}', msg)
             if rslt is None:
-                self.log.error("Something wrong")
+                self.log.error("Failed to parse data from serial")
                 return
             reservoir = rslt[0]
             flowRate = rslt[1]
@@ -197,20 +198,19 @@ class MainWindow(QMainWindow):
             if serial.open(QIODevice.OpenModeFlag.ReadWrite):
                 self.serial = serial
                 self.labelPort.setText(name)
-                self.log.info(f"Serial connected: {name}")
-
                 #self.buttonStart.setEnabled(True)
+                self.log.info(f"Serial connected: {name}")
             else:
                 self.serial = None
+                #self.buttonStart.setEnabled(False)
                 self.log.error(f'Failed to open serial port: {name}')
 
-                #self.buttonStart.setEnabled(False)
 
     def sendText(self, text: str):
-        self.log.debug(f'Serial sent text "{text}"')
         if self.serial is not None:
             qba = QByteArray(text.encode("utf-8"))
             self.serial.write(qba)
+        self.log.debug(f'Serial sent "{text}"')
 
     def closeEvent(self, event):
         if self.serial is not None:

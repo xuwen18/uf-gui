@@ -43,10 +43,11 @@ class Canvas(QFrame):
         self.y2 = np.append(self.y2[1:], nextY2)
 
         self.ax.clear()
-        self.ax.plot(self.x1, self.y1)
-        self.ax.plot(self.x1, self.y2)
+        self.ax.plot(self.x1, self.y1, label='Actual')
+        self.ax.plot(self.x1, self.y2, label='Expected')
         self.ax.set_xlabel(const.X_LABEL)
         self.ax.set_ylabel(const.Y_LABEL)
         self.ax.set_ylim(bottom=0)
+        self.ax.legend()
         self.ax.grid()
         self.fc.draw()
