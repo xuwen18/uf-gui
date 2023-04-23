@@ -1,6 +1,7 @@
 *.csv
 output/
 .vscode/
+trash.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

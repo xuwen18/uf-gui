@@ -171,8 +171,8 @@ class MainWindow(QMainWindow):
 
     def onReadyRead(self):
         self.buffer.append(self.serial.readAll())
-        idx_l = self.buffer.lastIndexOf(b"[")
-        idx_r = self.buffer.lastIndexOf(b"]")
+        idx_l = self.buffer.lastIndexOf(const.MSG_BEGIN.encode())
+        idx_r = self.buffer.lastIndexOf(const.MSG_END.encode())
         if idx_l != -1 and idx_r != -1 and idx_l < idx_r:
             qba = self.buffer.mid(1+idx_l, idx_r-idx_l-1)
             msg = qba.data().decode()
