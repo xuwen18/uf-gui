@@ -1,11 +1,11 @@
 import os
 from datetime import datetime
 
-import const
-
 from PySide6.QtGui     import QTextCursor
 from PySide6.QtCore    import QObject, Signal, Slot
 from PySide6.QtWidgets import QTextEdit
+
+import const
 
 class LogStream(QObject):
     written = Signal(tuple)

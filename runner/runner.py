@@ -63,4 +63,3 @@ class Runner:
 
 def _getText(reservoir: str, flowRate: float):
     return f',{const.RESERVOIR_INDEX[reservoir]},{flowRate:.3f}'
-
